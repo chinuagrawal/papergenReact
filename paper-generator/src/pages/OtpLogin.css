@@ -1,0 +1,150 @@
+/* --- OtpLogin.css --- */
+/* Modern premium OTP Login styling */
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  color: var(--text-light);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+:root {
+  --bg1: #0a0f24;
+  --bg2: #111c3d;
+  --accent1: #6a11cb;
+  --accent2: #2575fc;
+  --text-light: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --glass: rgba(255, 255, 255, 0.1);
+}
+
+
+
+/* Background animation glow */
+.otp-container {
+  height: 100svh; /* ✅ smart viewport unit: fits on all phones */
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: relative;
+  background: radial-gradient(circle at top left, rgba(106, 17, 203, 0.25), transparent 50%),
+              radial-gradient(circle at bottom right, rgba(37, 117, 252, 0.25), transparent 50%);
+  animation: bg-move 8s ease-in-out infinite alternate;
+  overflow: hidden;
+  padding: 1.2rem;
+}
+@keyframes bg-move {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+/* Glass card */
+.otp-card {
+  width: 380px;
+  max-width: 75%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(20px) saturate(120%);
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(37, 117, 252, 0.25);
+  position: relative;
+}
+
+/* Floating logo */
+/* Bigger logo - polished center focus */
+.otp-logo {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: -120px auto 20px;
+  display: block;
+  box-shadow: 0 20px 50px rgba(37, 117, 252, 0.4);
+  border: 5px solid rgba(255, 255, 255, 0.2);
+  background: radial-gradient(circle at center, rgba(106,17,203,0.25), rgba(255,255,255,0.08));
+}
+
+
+
+/* Heading */
+.otp-card h2 {
+  font-weight: 600;
+  font-size: 1.6rem;
+  margin-top: 10px;
+  margin-bottom: 1.2rem;
+}
+
+/* Input */
+.otp-input {
+  width: 90%;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-light);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  outline: none;
+  transition: 0.2s;
+}
+
+.otp-input:focus {
+  border-color: var(--accent2);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 10px rgba(37, 117, 252, 0.2);
+}
+
+/* Button */
+.otp-button {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(90deg, var(--accent1), var(--accent2));
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 20px rgba(37, 117, 252, 0.3);
+}
+
+.otp-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(37, 117, 252, 0.4);
+}
+
+.otp-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Resend button */
+.resend-btn {
+  margin-top: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.resend-btn:hover {
+  color: #a7c8ff;
+}
+
+.resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
