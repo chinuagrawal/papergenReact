@@ -5,9 +5,13 @@ function RoleSelect() {
 
   const handleSelect = (role) => {
     localStorage.setItem("role", role);
-    navigate("/institution");
+    if (role === "teacher") {
+      navigate("/teacher");
+    } else {
+      navigate("/student");
+    }
   };
-
+ 
   return (
     <div className="page-container">
       <div className="card">
