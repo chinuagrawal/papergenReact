@@ -18,10 +18,10 @@ function App() {
         
         
         
-        <Route path="/" element={<OtpLogin />} />
-        <Route path="/Login" element={<Loginpage />} />
         <Route path="/role" element={<RoleSelect />} />
        
+        <Route path="/" element={<OtpLogin />} />
+        <Route path="/Login" element={<Loginpage />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/student" element={<StudentDashboard />} />
       </Routes>
