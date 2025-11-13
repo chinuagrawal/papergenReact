@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import twilio from 'twilio';
+import User from "./models/User.js";
 
 dotenv.config();
 const app = express();
@@ -56,9 +57,54 @@ app.post('/api/verify-otp', async (req, res) => {
     return res.json({ success: false, message: 'Invalid OTP' });
   }
 
-  // OTP valid — delete it and return success
+  // ✅ OTP valid — create/update user record
+  let user = await User.findOne({ mobile });
+  if (!user) {
+    user = new User({ mobile, verified: true });
+  } else {
+    user.verified = true;
+  }
+  await user.save();
+
+  // ✅ Delete OTP after use
   await OTP.deleteMany({ mobile });
-  res.json({ success: true, message: 'OTP verified successfully' });
+
+  res.json({ success: true, message: 'OTP verified successfully', user });
+});
+// ✅ SAVE ROLE (RoleSelect.jsx calls this)
+app.post("/api/save-role", async (req, res) => {
+  try {
+    const { mobile, role } = req.body;
+    if (!mobile || !role)
+      return res.status(400).json({ success: false, message: "Missing mobile or role" });
+
+    const user = await User.findOneAndUpdate(
+      { mobile },
+      { role },
+      { new: true, upsert: false }
+    );
+
+    if (!user)
+      return res.status(404).json({ success: false, message: "User not found" });
+
+    res.status(200).json({ success: true, message: "Role saved", user });
+  } catch (err) {
+    console.error("Role save error:", err.message);
+    res.status(500).json({ success: false, message: "Failed to save role" });
+  }
+});
+
+// ✅ Get User (for restoring session)
+app.post("/api/get-user", async (req, res) => {
+  try {
+    const { mobile } = req.body;
+    const user = await User.findOne({ mobile });
+    if (!user)
+      return res.status(404).json({ success: false, message: "User not found" });
+    res.status(200).json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 app.listen(5000, () => console.log('Server running on port 5000'));

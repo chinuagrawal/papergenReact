@@ -1,15 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import logo from "/src/images/hero-mobile.png"; // ✅ ensure correct path
-import "./OtpLogin.css"; // ✅ optional CSS for background/animations if needed
+import logo from "/src/images/hero-mobile.png";
+import "./OtpLogin.css";
 
 const OtpLogin = () => {
+  const navigate = useNavigate();
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
 
+  // ✅ Auto redirect based on role (on page load)
+  useEffect(() => {
+    const mobile = localStorage.getItem("userMobile");
+    if (!mobile) return;
+
+    axios
+      .post("http://localhost:5000/api/get-user", { mobile })
+      .then((res) => {
+        const role = res.data.user?.role;
+        if (role === "teacher") navigate("/teacher");
+        else if (role === "student") navigate("/student");
+        else navigate("/role");
+      })
+      .catch(() => {
+        localStorage.clear();
+      });
+  }, []);
+
+  // ✅ Send OTP
   const sendOtp = async () => {
     if (mobile.length !== 10) return alert("Enter valid mobile number");
     setLoading(true);
@@ -25,6 +46,7 @@ const OtpLogin = () => {
     setLoading(false);
   };
 
+  // ✅ Verify OTP
   const verifyOtp = async () => {
     if (!otp) return alert("Enter OTP");
     setLoading(true);
@@ -33,7 +55,7 @@ const OtpLogin = () => {
       if (res.data.success) {
         alert("Login successful!");
         localStorage.setItem("userMobile", mobile);
-        window.location.href = "/role";
+        navigate("/role");
       } else alert(res.data.message || "Invalid OTP");
     } catch {
       alert("Error verifying OTP");
@@ -41,6 +63,7 @@ const OtpLogin = () => {
     setLoading(false);
   };
 
+  // ✅ Timer for resend OTP
   const startTimer = () => {
     setTimer(60);
     const interval = setInterval(() => {
@@ -57,8 +80,7 @@ const OtpLogin = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white border border-gray-100 rounded-2xl shadow-lg p-8 text-center animate-fadeIn">
-        
-        {/* 🧠 Bigger and more glowing logo */}
+        {/* 🧠 Logo */}
         <img
           src={logo}
           alt="App Logo"
