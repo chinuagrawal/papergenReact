@@ -1,8 +1,8 @@
+// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  plugins: [react()],
-  base: "/papergenReact/",
- 
+  base: '/papergenReact/', // <-- make sure this exactly matches your repo name, trailing slash included
+  plugins: [react()]
 })
