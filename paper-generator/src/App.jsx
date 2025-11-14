@@ -4,6 +4,7 @@ import Admin from './pages/Admin';
 import RoleSelect from "./pages/RoleSelect";
 
 import TeacherDashboard from "./pages/TeacherDashboard";
+import BooksPage from "./pages/booksPage";
 import StudentDashboard from "./pages/StudentDashboard";
 import OtpLogin from "./pages/OtpLogin"; // ✅ import new page
 import Loginpage from "./pages/Loginpage"; // ✅ import new page
@@ -23,6 +24,8 @@ function App() {
         <Route path="/" element={<OtpLogin />} />
         <Route path="/Login" element={<Loginpage />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
+        <Route path="/selectedBooks" element={<BooksPage/>} />
+
         <Route path="/student" element={<StudentDashboard />} />
       </Routes>
     </BrowserRouter>

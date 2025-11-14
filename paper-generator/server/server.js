@@ -5,6 +5,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import twilio from 'twilio';
 import User from "./models/User.js";
+import Selection from "./models/Selection.js";
 
 dotenv.config();
 const app = express();
@@ -106,5 +107,63 @@ app.post("/api/get-user", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+// SAVE SELECTION (Teacher Dashboard Page-1)
+app.post("/api/save-selection", async (req, res) => {
+  try {
+    const { teacher, board, className, subject, bookTypes } = req.body;
+
+    if (!teacher || !board || !className || !subject || !bookTypes.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    const selection = await Selection.create({
+      teacher,
+      board,
+      className,
+      subject,
+      bookTypes,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Selection saved successfully",
+      selection,
+    });
+
+  } catch (err) {
+    console.log("Save selection error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while saving selection",
+    });
+  }
+});
+
+
+app.post("/api/get-last-selection", async (req, res) => {
+  try {
+    const { teacher } = req.body;
+    if (!teacher) {
+      return res.status(400).json({ success: false, message: "Teacher mobile missing" });
+    }
+
+    const selection = await Selection.findOne({ teacher }).sort({ createdAt: -1 });
+
+    if (!selection) {
+      return res.json({ success: false, message: "No selection found" });
+    }
+
+    res.json({ success: true, selection });
+
+  } catch (err) {
+    console.log("Get last selection error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 app.listen(5000, () => console.log('Server running on port 5000'));
