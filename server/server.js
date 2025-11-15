@@ -9,7 +9,9 @@ import Selection from "./models/Selection.js";
 
 dotenv.config();
 const app = express();
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors());
+
+
 app.use(bodyParser.json());
 
 // MongoDB setup
