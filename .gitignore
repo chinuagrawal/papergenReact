@@ -11,7 +11,9 @@ node_modules
 
 *.local
 server/.env
-dist
+
+dist/
+.env
 
 # Editor directories and files
 .vscode/*
