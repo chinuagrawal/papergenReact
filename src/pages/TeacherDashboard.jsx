@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { SUBJECTS } from "../data/subjects";
+const API = import.meta.env.VITE_API_URL;
+
 
 function TeacherDashboard() {
   const navigate = useNavigate();
@@ -21,7 +23,7 @@ function TeacherDashboard() {
     if (!mobile) return navigate("/");
 
     axios
-      .post("http://localhost:5000/api/get-user", { mobile })
+      .post(`${API}/api/get-user`, { mobile })
       .then((res) => {
         if (res.data.success) setUser(res.data.user);
         else navigate("/");
@@ -50,7 +52,8 @@ function TeacherDashboard() {
     if (!board || !className || !subject || !bookTypes.length)
       return alert("Please fill all fields");
 
-    await axios.post("http://localhost:5000/api/save-selection", {
+    await axios.post(`${API}/api/save-selection`, {
+
       teacher: user.mobile,
       board,
       className,

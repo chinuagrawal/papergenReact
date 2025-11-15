@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+const API = import.meta.env.VITE_API_URL;
 
 function RoleSelect() {
   const navigate = useNavigate();
@@ -7,7 +8,7 @@ function RoleSelect() {
     const mobile = localStorage.getItem("userMobile");
     if (!mobile) return navigate("/");
 
-    const res = await fetch("http://localhost:5000/api/save-role", {
+    const res = await fetch(`${API}/api/save-role`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mobile, role }),
