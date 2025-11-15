@@ -4,6 +4,9 @@ import axios from "axios";
 import logo from "/src/images/hero-mobile.png";
 import "./OtpLogin.css";
 
+// 🔥 API Base URL from .env
+const API = import.meta.env.VITE_API_URL;
+
 const OtpLogin = () => {
   const navigate = useNavigate();
   const [mobile, setMobile] = useState("");
@@ -18,7 +21,7 @@ const OtpLogin = () => {
     if (!mobile) return;
 
     axios
-      .post("http://localhost:5000/api/get-user", { mobile })
+      .post(`${API}/api/get-user`, { mobile })
       .then((res) => {
         const role = res.data.user?.role;
         if (role === "teacher") navigate("/teacher");
@@ -34,8 +37,9 @@ const OtpLogin = () => {
   const sendOtp = async () => {
     if (mobile.length !== 10) return alert("Enter valid mobile number");
     setLoading(true);
+
     try {
-      const res = await axios.post("http://localhost:5000/api/send-otp", { mobile });
+      const res = await axios.post(`${API}/api/send-otp`, { mobile });
       if (res.data.success) {
         setStep(2);
         startTimer();
@@ -43,6 +47,7 @@ const OtpLogin = () => {
     } catch {
       alert("Error connecting to server");
     }
+
     setLoading(false);
   };
 
@@ -50,8 +55,9 @@ const OtpLogin = () => {
   const verifyOtp = async () => {
     if (!otp) return alert("Enter OTP");
     setLoading(true);
+
     try {
-      const res = await axios.post("http://localhost:5000/api/verify-otp", { mobile, otp });
+      const res = await axios.post(`${API}/api/verify-otp`, { mobile, otp });
       if (res.data.success) {
         alert("Login successful!");
         localStorage.setItem("userMobile", mobile);
@@ -60,6 +66,7 @@ const OtpLogin = () => {
     } catch {
       alert("Error verifying OTP");
     }
+
     setLoading(false);
   };
 
@@ -80,7 +87,6 @@ const OtpLogin = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white border border-gray-100 rounded-2xl shadow-lg p-8 text-center animate-fadeIn">
-        {/* 🧠 Logo */}
         <img
           src={logo}
           alt="App Logo"
@@ -90,9 +96,7 @@ const OtpLogin = () => {
         <h3 className="text-2xl font-semibold text-gray-800 mb-2">
           Welcome to <span className="text-blue-600">Paper Generation</span>
         </h3>
-        <p className="text-gray-500 text-sm mb-6">
-          Powered by <strong>PaprPlus</strong>
-        </p>
+        <p className="text-gray-500 text-sm mb-6">Powered by <strong>PaprPlus</strong></p>
 
         {step === 1 ? (
           <>
