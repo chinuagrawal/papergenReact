@@ -24,7 +24,8 @@ function SelectChapter() {
     const mobile = localStorage.getItem("userMobile");
 
     axios
-      .post("${API}/api/get-last-selection", { teacher: mobile })
+      .post(`${API}/api/get-last-selection`, { teacher: mobile })
+      
       .then((res) => {
         if (res.data.success) {
           setSelection(res.data.selection);
