@@ -13,8 +13,8 @@ function App() {
   return (
     <BrowserRouter basename="/papergenReact">
       <Routes>
-        <Route path="/role" element={<RoleSelect />} />
         <Route path="/" element={<OtpLogin />} />
+        <Route path="/role" element={<RoleSelect />} />
         <Route path="/Login" element={<Loginpage />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/selectedBooks" element={<BooksPage />} />
