@@ -61,7 +61,16 @@ function TeacherDashboard() {
       bookTypes,
     });
 
-    navigate("/selectedBooks"); // page 2: chapters will be there
+    navigate("/selectedBooks", {
+  state: {
+    board,
+    className,
+    subject,
+    bookTypes,
+    teacher: user.mobile
+  }
+});
+ // page 2: chapters will be there
   };
 
   const handleLogout = () => {
