@@ -15,6 +15,9 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@google-cloud/documentai": "^9.5.0",
+    "@google-cloud/storage": "^7.17.3",
+    "@google-cloud/vision": "^5.3.4",
     "@mui/material": "^7.3.5",
     "axios": "^1.13.2",
     "body-parser": "^2.2.0",
@@ -22,6 +25,8 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mongoose": "^8.19.3",
+    "multer": "^2.0.2",
+    "pdf-parse": "^2.4.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^6.30.1",
