@@ -12,7 +12,7 @@ node_modules
 *.local
 server/.env
 server/google-vision-key.json
-
+code structure
 dist/
 .env
 
