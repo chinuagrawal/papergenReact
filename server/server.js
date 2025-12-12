@@ -8,6 +8,7 @@ const twilio = require("twilio");
 // MODELS
 const User = require("./models/User.js");
 const Selection = require("./models/Selection.js");
+const { sequelize } = require('./models');
 
 // ROUTES
 const ocrRoutes = require("./routes/ocr.js");
@@ -16,6 +17,19 @@ const ocrRoutes = require("./routes/ocr.js");
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
+
+
+
+const multer = require('multer');
+const path = require('path');
+
+const upload = multer({ dest: path.join(__dirname, 'tmp') });
+const ocrController = require('./controllers/ocrController');
+const adminController = require('./controllers/adminController');
+
+
+app.use(express.json());
 
 // MongoDB setup
 mongoose.connect(process.env.MONGO_URI, {
@@ -168,3 +182,29 @@ app.post("/api/get-last-selection", async (req, res) => {
 
 // START SERVER
 app.listen(5000, () => console.log("Server running on port 5000"));
+
+
+// init DB
+(async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync({ alter: true }); // dev convenience
+    console.log('DB connected');
+  } catch (e) { console.error(e); process.exit(1); }
+})();
+
+// routes
+app.post('/api/admin/upload', upload.single('file'), ocrController.processUpload);
+app.get('/api/admin/documents', adminController.listDocuments);
+app.get('/api/admin/documents/:id', adminController.getDocument);
+app.put('/api/admin/questions/:id', adminController.updateQuestion);
+app.delete('/api/admin/questions/:id', adminController.deleteQuestion);
+app.delete('/api/admin/documents/:id', adminController.deleteDocument);
+
+// static uploads serve for local storage
+if (process.env.USE_GCS !== 'true') {
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+}
+
+
+

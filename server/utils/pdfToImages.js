@@ -1,25 +1,40 @@
-const poppler = require('pdf-poppler');
-const path = require('path');
-const fs = require('fs');
+// utils/pdfToImages.js
+const path = require("path");
+const fs = require("fs");
+const os = require("os");
+const poppler = require("pdf-poppler");
 
-exports.convertPdfToImages = async (pdfPath) => {
-  const outDir = path.join(__dirname, '../page-images');
-  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
+module.exports.convertPdfToImages = async function convertPdfToImages(pdfPath) {
+  try {
+    const outputDir = path.join(os.tmpdir(), "pdf_pages_" + Date.now());
+    fs.mkdirSync(outputDir);
 
-  const options = {
-    format: 'jpeg',
-    out_dir: outDir,
-    out_prefix: 'page',
-    page: null,
-  };
+    let opts = {
+      format: "png",
+      out_dir: outputDir,
+      out_prefix: "page",
+      page: null
+    };
 
-  await poppler.convert(pdfPath, options);
+    console.log("📄 Converting PDF → images using Poppler...");
 
-  // Return images sorted: page-1.jpg, page-2.jpg...
-  const images = fs.readdirSync(outDir)
-    .filter(f => f.startsWith('page'))
-    .map(f => path.join(outDir, f))
-    .sort();
+    await poppler.convert(pdfPath, opts);
 
-  return images;
+    // Collect generated PNGs in correct page order
+    const files = fs.readdirSync(outputDir)
+      .filter(f => f.endsWith(".png"))
+      .sort((a, b) => {
+        const n1 = parseInt(a.replace("page-", "").replace(".png", ""));
+        const n2 = parseInt(b.replace("page-", "").replace(".png", ""));
+        return n1 - n2;
+      })
+      .map(f => path.join(outputDir, f));
+
+    console.log("✔ PDF converted to", files.length, "pages");
+
+    return files;
+  } catch (err) {
+    console.error("❌ Poppler conversion failed:", err);
+    throw err;
+  }
 };
