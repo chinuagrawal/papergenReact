@@ -10,8 +10,20 @@ if (pgConn) {
   sequelize = new Sequelize(pgConn, {
     dialect: 'postgres',
     logging: false,
-    // keep pool / ssl defaults if needed; you can expand options here
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false, // REQUIRED for Neon
+      },
+    },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
   });
+
 } else {
   // DEV fallback: sqlite - no external DB required
   const storagePath = path.join(process.cwd(), 'dev-data.sqlite');
