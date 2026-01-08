@@ -3,7 +3,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const twilio = require("twilio");
+const axios = require("axios");
+// const twilio = require("twilio");
 
 // MODELS
 const User = require("./models/User.js");
@@ -36,12 +37,12 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log("MongoDB connected"))
-.catch((err) => console.log(err));
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log(err));
 
-// Twilio setup
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-const fromNumber = process.env.TWILIO_PHONE;
+// // Twilio setup
+// const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+// const fromNumber = process.env.TWILIO_PHONE;
 
 // OTP Schema (auto delete after 5 min)
 const otpSchema = new mongoose.Schema({
@@ -57,29 +58,61 @@ console.log("📌 OCR ROUTES REGISTERED ON /api/ocr");
 
 
 // ========== SEND OTP ==========
+// app.post("/api/send-otp", async (req, res) => {
+//   const { mobile } = req.body;
+//   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+//   await OTP.deleteMany({ mobile });
+//   await OTP.create({ mobile, otp });
+
+//   try {
+//     await client.messages.create({
+//       body: `Your OTP for login is ${otp}`,
+//       from: fromNumber,
+//       to: `+91${mobile}`
+//     });
+//     res.json({ success: true, message: "OTP sent successfully" });
+//   } catch (err) {
+//     console.log(err);
+//     res.json({ success: false, message: "Failed to send OTP" });
+//   }
+// });
+
+
 app.post("/api/send-otp", async (req, res) => {
-  const { mobile } = req.body;
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  await OTP.deleteMany({ mobile });
-  await OTP.create({ mobile, otp });
-
   try {
-    await client.messages.create({
-      body: `Your OTP for login is ${otp}`,
-      from: fromNumber,
-      to: `+91${mobile}`
+    let { mobile } = req.body;
+
+    if (!mobile) {
+      return res.status(400).json({ message: "Mobile required" });
+    }
+
+    // India format (no +)
+    mobile = mobile.startsWith("91") ? mobile : `91${mobile}`;
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    await OTP.create({
+      mobile,
+      otp
     });
-    res.json({ success: true, message: "OTP sent successfully" });
+
+    await axios.get(
+      `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${mobile}/${otp}`
+    );
+
+    res.json({ success: true, message: "OTP sent" });
+
   } catch (err) {
-    console.log(err);
-    res.json({ success: false, message: "Failed to send OTP" });
+    console.error("OTP error:", err.message);
+    res.status(500).json({ success: false });
   }
 });
-
 // ========== VERIFY OTP ==========
 app.post("/api/verify-otp", async (req, res) => {
-  const { mobile, otp } = req.body;
+  let { mobile, otp } = req.body;
+  // 🔑 SAME FORMAT AS send-otp
+  mobile = mobile.startsWith("91") ? mobile : `91${mobile}`;
   const record = await OTP.findOne({ mobile, otp });
 
   if (!record)
