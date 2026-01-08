@@ -1,6 +1,7 @@
 {
   "type": "commonjs",
   "dependencies": {
+    "@google-cloud/documentai": "^9.5.0",
     "image-size": "^2.0.2",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
