@@ -33,12 +33,9 @@ const adminController = require('./controllers/adminController');
 app.use(express.json());
 
 // MongoDB setup
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log(err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ DB connected"))
+  .catch(err => console.error("❌ DB error", err));
 
 // // Twilio setup
 // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
