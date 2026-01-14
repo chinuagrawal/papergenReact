@@ -7,6 +7,9 @@ import OtpLogin from "./pages/OtpLogin";
 import Loginpage from "./pages/Loginpage";
 import AdminReviewPanel from "./pages/AdminReviewPanel";
 import "./App.css";
+import AdminMasterData from "./admin/AdminMasterData";
+import AdminOcrUpload from "./admin/AdminOcrUpload";
+
 
 function App() {
   return (
@@ -19,6 +22,8 @@ function App() {
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/selectedBooks" element={<BooksPage />} />
         <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/admin/master" element={<AdminMasterData />} />
+        <Route path="/admin/ocr-upload" element={<AdminOcrUpload />} />
       </Routes>
     </BrowserRouter>
   );
