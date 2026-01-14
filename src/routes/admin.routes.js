@@ -25,7 +25,17 @@ import {
   addChapter, getChapters
 } from "../controllers/masterData.controller.js";
 
+
 /* ---------- OCR UPLOAD ---------- */
+/**
+ * Upload chapter PDF (multipart)
+ * POST /api/admin/upload-pdf
+ */
+router.post(
+  "/upload-pdf",
+  pdfUpload.single("pdf"),   // 🔑 THIS WAS MISSING
+  uploadChapterPDF
+);
 
 router.post("/run-ocr-now", async (req, res) => {
   const { ocrJobId, pdfUrl } = req.body;

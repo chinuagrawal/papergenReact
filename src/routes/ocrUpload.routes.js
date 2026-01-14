@@ -10,7 +10,7 @@ const router = express.Router();
  * ONLY multer + controller
  */
 router.post(
-  "/upload-chapter-pdf",
+  "/upload-pdf",
   pdfUpload.single("pdf"),
   uploadChapterPDF
 );
