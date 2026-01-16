@@ -61,13 +61,13 @@ const fileRef = useRef(null);
   formData.append("pdf", file);
 
   try {
-    const res = await fetch(`${API}/upload-chapter-pdf`, {
+    const res = await fetch(`${API}/upload-pdf`, {
       method: "POST",
       body: formData,
     });
 
     const data = await res.json();
-    setMessage(`✅ OCR started (Job ID: ${data.ocrJobId})`);
+    setMessage(`OCR started (Job ID: ${data.jobId})`);
   } catch (err) {
     setMessage("Upload failed");
   }

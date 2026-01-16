@@ -5,29 +5,31 @@ import { updateOCRJob } from "../models/ocrJob.model.js";
 
 export async function processOCRJob(ocrJobId, pdfUrl) {
   try {
-    await updateOCRJob(ocrJobId, "processing");
+    await updateOCRJob(ocrJobId, {
+      status: "processing",
+      error: null,
+    });
 
-    // 1️⃣ Run OCR
     const outputPrefix = await runOCR(
       process.env.DOCUMENT_AI_PROCESSOR,
       pdfUrl,
       ocrJobId
     );
 
-    // 2️⃣ Fetch raw OCR JSON
     const ocrJsonArray = await fetchRawOCRJson(outputPrefix);
-
-    // 3️⃣ Store raw OCR JSON
     const storedPath = saveRawOCRToDisk(ocrJobId, ocrJsonArray);
 
-    // 4️⃣ Mark job complete
-    await updateOCRJob(ocrJobId, "completed");
+    await updateOCRJob(ocrJobId, {
+      status: "completed",
+      output_path: storedPath,
+    });
 
-    console.log(
-      `✅ OCR completed for job ${ocrJobId}, saved at ${storedPath}`
-    );
+    console.log(`✅ OCR completed for job ${ocrJobId}`);
   } catch (err) {
-    await updateOCRJob(ocrJobId, "failed", err.message);
+    await updateOCRJob(ocrJobId, {
+      status: "failed",          // ✅ short value
+      error: err.message,        // ✅ long message goes here
+    });
     throw err;
   }
 }

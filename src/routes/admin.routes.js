@@ -8,6 +8,8 @@ import { upload } from "../middlewares/multer.js";
 import { uploadChapterPDF } from "../controllers/upload.controller.js";
 import { processOCRJob } from "../workers/ocr.worker.js";
 import { saveExtractedQuestions } from "../controllers/saveQuestions.controller.js";
+import { getOCRStatus } from "../controllers/ocrStatus.controller.js";
+import { getOCRResult } from "../controllers/ocrResult.controller.js";
 
 /* Admin Review */
 import { getQuestionsByChapter } from "../controllers/adminQuestions.controller.js";
@@ -42,6 +44,8 @@ router.post("/run-ocr-now", async (req, res) => {
   await processOCRJob(ocrJobId, pdfUrl);
   res.json({ success: true });
 });
+router.get("/ocr-status/:jobId", getOCRStatus);
+router.get("/ocr-result/:jobId", getOCRResult);
 
 router.post("/save-questions", saveExtractedQuestions);
 

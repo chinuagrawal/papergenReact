@@ -9,6 +9,7 @@ import AdminReviewPanel from "./pages/AdminReviewPanel";
 import "./App.css";
 import AdminMasterData from "./admin/AdminMasterData";
 import AdminOcrUpload from "./admin/AdminOcrUpload";
+import AdminOcrReview from "./admin/AdminOcrReview";
 
 
 function App() {
@@ -24,6 +25,11 @@ function App() {
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/admin/master" element={<AdminMasterData />} />
         <Route path="/admin/ocr-upload" element={<AdminOcrUpload />} />
+        <Route
+  path="/admin/ocr-review/:jobId/:chapterId"
+  element={<AdminOcrReview />}
+/>
+
       </Routes>
     </BrowserRouter>
   );
