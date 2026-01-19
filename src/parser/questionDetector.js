@@ -1,7 +1,7 @@
 /**
  * Question Detection Engine
  * Input: normalized text blocks
- * Output: structured questions with answers
+ * Output: questions with answers ONLY
  */
 
 export function detectQuestions(blocks) {
@@ -11,23 +11,20 @@ export function detectQuestions(blocks) {
 
   for (const block of blocks) {
     const text = block.text.trim();
+    if (!text || isInstruction(text)) continue;
 
-    if (isInstruction(text)) continue;
-
-    // 🔹 New main question
+    // 🔹 New Question
     const qMatch = matchMainQuestion(text);
     if (qMatch) {
-      if (currentQuestion) {
-        questions.push(currentQuestion);
-      }
+      if (currentQuestion) questions.push(enrichQuestion(currentQuestion));
 
       currentQuestion = {
         questionNumber: qMatch.number,
         questionText: qMatch.text,
-        subQuestions: [],
         answer: "",
         marks: null,
         type: null,
+        difficulty: null
       };
 
       collectingAnswer = false;
@@ -41,17 +38,7 @@ export function detectQuestions(blocks) {
       continue;
     }
 
-    // 🔹 Sub-question
-    const subQ = matchSubQuestion(text);
-    if (subQ && currentQuestion) {
-      currentQuestion.subQuestions.push({
-        label: subQ.label,
-        text: subQ.text,
-      });
-      continue;
-    }
-
-    // 🔹 Append text
+    // 🔹 Append content
     if (currentQuestion) {
       if (collectingAnswer) {
         currentQuestion.answer += " " + text;
@@ -61,12 +48,13 @@ export function detectQuestions(blocks) {
     }
   }
 
-  if (currentQuestion) {
-    questions.push(currentQuestion);
-  }
+  if (currentQuestion) questions.push(enrichQuestion(currentQuestion));
 
-  return questions.map(enrichQuestion);
+  return questions;
 }
+
+/* ---------- HELPERS ---------- */
+
 function matchMainQuestion(text) {
   const patterns = [
     /^(\d+)[\.\)\:\-]\s*(.+)/,   // 1. Question
@@ -76,35 +64,12 @@ function matchMainQuestion(text) {
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
-      return {
-        number: match[1],
-        text: match[2],
-      };
+      return { number: match[1], text: match[2] };
     }
   }
-
   return null;
 }
-function matchSubQuestion(text) {
-  const patterns = [
-    /^\(?([a-z])\)\s*(.+)/i,     // (a)
-    /^([a-z])\)\s*(.+)/i,        // a)
-    /^\(?([ivx]+)\)\s*(.+)/i,    // (i)
-    /^([ivx]+)\.\s*(.+)/i        // i.
-  ];
 
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return {
-        label: match[1],
-        text: match[2],
-      };
-    }
-  }
-
-  return null;
-}
 function isAnswerStart(text) {
   return /^ans[\.\:\-]/i.test(text) || /^answer[\.\:\-]/i.test(text);
 }
@@ -112,32 +77,26 @@ function isAnswerStart(text) {
 function cleanAnswerText(text) {
   return text.replace(/^ans[\.\:\-]?\s*/i, "").trim();
 }
+
 function isInstruction(text) {
-  const keywords = [
+  return [
     "answer the following",
     "do as directed",
     "time:",
     "total marks",
     "instructions",
-  ];
-
-  return keywords.some(k => text.toLowerCase().includes(k));
+  ].some(k => text.toLowerCase().includes(k));
 }
+
 function enrichQuestion(q) {
   const len = q.questionText.length;
 
-  if (q.subQuestions.length > 0) {
-    q.type = "Structured";
-  } else if (len < 80) {
-    q.type = "Very Short";
-  } else if (len < 150) {
-    q.type = "Short";
-  } else {
-    q.type = "Long";
-  }
+  if (len < 80) q.type = "Very Short";
+  else if (len < 150) q.type = "Short";
+  else q.type = "Long";
 
-  q.answer = q.answer.trim();
   q.questionText = q.questionText.trim();
+  q.answer = q.answer.trim();
 
   return q;
 }

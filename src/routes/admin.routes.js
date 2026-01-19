@@ -52,7 +52,7 @@ router.post("/save-questions", saveExtractedQuestions);
 /* ---------- REVIEW ---------- */
 router.get("/questions/:chapterId", getQuestionsByChapter);
 router.put("/question/:id", updateQuestion);
-router.put("/sub-question/:id", updateSubQuestion);
+
 router.post("/upload-image", upload.single("image"), uploadQuestionImage);
 router.post("/approve-ocr", approveOcrJob);
 

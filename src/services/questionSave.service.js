@@ -1,7 +1,7 @@
 import { pool } from "../config/db.js";
 
 /**
- * Save extracted questions into PostgreSQL
+ * Save extracted questions (NO sub-questions)
  */
 export async function saveQuestions({
   chapterId,
@@ -14,7 +14,7 @@ export async function saveQuestions({
     await client.query("BEGIN");
 
     for (const q of questions) {
-      const res = await client.query(
+      await client.query(
         `
         INSERT INTO questions (
           chapter_id,
@@ -27,7 +27,6 @@ export async function saveQuestions({
           answer_text
         )
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-        RETURNING id
         `,
         [
           chapterId,
@@ -40,29 +39,6 @@ export async function saveQuestions({
           q.answer || null
         ]
       );
-
-      const questionId = res.rows[0].id;
-
-      // 🔹 Insert sub-questions
-      for (const sq of q.subQuestions || []) {
-        await client.query(
-          `
-          INSERT INTO sub_questions (
-            question_id,
-            label,
-            sub_question_text,
-            sub_answer_text
-          )
-          VALUES ($1,$2,$3,$4)
-          `,
-          [
-            questionId,
-            sq.label,
-            sq.text,
-            sq.answer || null
-          ]
-        );
-      }
     }
 
     await client.query("COMMIT");
