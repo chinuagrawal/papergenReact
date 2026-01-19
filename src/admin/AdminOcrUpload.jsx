@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/masterDataApi";
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function AdminOcrUpload() {
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -48,7 +50,7 @@ const fileRef = useRef(null);
     setChapterId("");
   }, [bookId]);
 
-  const uploadPdf = async () => {
+ const uploadPdf = async () => {
   const file = fileRef.current?.files?.[0];
 
   if (!chapterId || !file) {
@@ -60,6 +62,9 @@ const fileRef = useRef(null);
   formData.append("chapterId", chapterId);
   formData.append("pdf", file);
 
+  setLoading(true);
+  setMessage("");
+
   try {
     const res = await fetch(`${API}/upload-pdf`, {
       method: "POST",
@@ -67,9 +72,16 @@ const fileRef = useRef(null);
     });
 
     const data = await res.json();
-    setMessage(`OCR started (Job ID: ${data.jobId})`);
+
+    if (data.success) {
+      navigate(
+        `/admin/ocr-review/${data.jobId}/${chapterId}`
+      );
+    } else {
+      setMessage("Upload failed");
+    }
   } catch (err) {
-    setMessage("Upload failed");
+    setMessage("Server error");
   }
 };
 
