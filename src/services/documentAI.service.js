@@ -1,16 +1,21 @@
 import { DocumentProcessorServiceClient } 
   from "@google-cloud/documentai";
-import { Storage } from "@google-cloud/storage";
-
-const client = new DocumentProcessorServiceClient();
-const storage = new Storage();
 
 /**
- * Runs OCR and returns the GCS folder where output JSON is written
+ * Runs OCR and returns the FULL GCS URI
+ * where Document AI writes output JSON
  */
+const client = new DocumentProcessorServiceClient({
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+});
+
 export async function runOCR(processorName, gcsPdfUrl, ocrJobId) {
   if (!processorName) {
-    throw new Error("DOCUMENT_AI_PROCESSOR is not set");
+    throw new Error("❌ DOCUMENT_AI_PROCESSOR is not set");
+  }
+
+  if (!process.env.GCS_BUCKET_NAME) {
+    throw new Error("❌ GCS_BUCKET_NAME is not set");
   }
 
   const outputPrefix = `ocr/raw-json/job-${ocrJobId}`;
@@ -29,6 +34,7 @@ export async function runOCR(processorName, gcsPdfUrl, ocrJobId) {
     },
     documentOutputConfig: {
       gcsOutputConfig: {
+        // ✅ MUST be a full gs:// URI
         gcsUri: `gs://${process.env.GCS_BUCKET_NAME}/${outputPrefix}/`,
       },
     },
@@ -37,5 +43,6 @@ export async function runOCR(processorName, gcsPdfUrl, ocrJobId) {
   const [operation] = await client.batchProcessDocuments(request);
   await operation.promise();
 
-  return outputPrefix;
+  // ✅ RETURN FULL URI (this is critical)
+  return `gs://${process.env.GCS_BUCKET_NAME}/${outputPrefix}/`;
 }

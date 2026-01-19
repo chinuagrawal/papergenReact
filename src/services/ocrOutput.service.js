@@ -1,19 +1,31 @@
 import { Storage } from "@google-cloud/storage";
 
-const storage = new Storage();
-const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
-
 /**
- * Fetches raw OCR JSON files written by Document AI
+ * Reads OCR JSON written by Document AI
+ * (NOT your bucket)
  */
+const storage = new Storage({
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+});
+
 export async function fetchRawOCRJson(outputPrefix) {
-  const [files] = await bucket.getFiles({
-    prefix: outputPrefix,
-  });
+  // outputPrefix is a FULL GCS PATH
+  // gs://bucket-name/path/...
+
+  const match = outputPrefix.match(/^gs:\/\/([^/]+)\/(.+)$/);
+  if (!match) {
+    throw new Error("Invalid OCR output prefix");
+  }
+
+  const [, bucketName, prefix] = match;
+
+  const bucket = storage.bucket(bucketName);
+
+  const [files] = await bucket.getFiles({ prefix });
 
   const jsonFiles = files.filter(f => f.name.endsWith(".json"));
 
-  if (jsonFiles.length === 0) {
+  if (!jsonFiles.length) {
     throw new Error("No OCR output JSON found");
   }
 

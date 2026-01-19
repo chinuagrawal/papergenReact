@@ -1,50 +1,43 @@
-import fs from "fs";
-import path from "path";
-
+import { getOCRJob } from "../models/ocrJob.model.js";
 import { normalizeLayout } from "../parser/layoutNormalizer.js";
 import { detectQuestions } from "../parser/questionDetector.js";
 import { processAnswers } from "../parser/answerProcessor.js";
+import { readOcrJsonFromGcs } from "../services/gcsOcrStorage.service.js";
 
 export async function getOCRResult(req, res) {
+  const { jobId } = req.params;
+
+  const job = await getOCRJob(jobId);
+
+  if (!job) {
+    return res.status(404).json({
+      success: false,
+      error: "OCR job not found",
+    });
+  }
+
+  // 🔑 KEY FIX
+  if (job.status !== "completed") {
+    return res.json({
+      success: true,
+      status: job.status,
+      message: "OCR still processing",
+      questions: [],
+    });
+  }
+
   try {
-    const { jobId } = req.params;
+    const ocrJsonArray = await readOcrJsonFromGcs(jobId);
 
-    const dir = path.join(
-      process.cwd(),
-      "ocr-output",
-      `job-${jobId}`
-    );
-
-    if (!fs.existsSync(dir)) {
-      return res.status(404).json({
-        success: false,
-        error: "OCR output not found",
-      });
-    }
-
-    const files = fs
-      .readdirSync(dir)
-      .filter(f => f.endsWith(".json"))
-      .sort();
-
-    const ocrJsonArray = files.map(file =>
-      JSON.parse(
-        fs.readFileSync(path.join(dir, file), "utf8")
-      )
-    );
-
-    // ✅ YOUR EXISTING PARSERS
     const blocks = normalizeLayout(ocrJsonArray);
     let questions = detectQuestions(blocks);
     questions = processAnswers(questions);
 
     res.json({
       success: true,
-      jobId,
-      totalQuestions: questions.length,
+      status: "completed",
       questions,
     });
-
   } catch (err) {
     console.error("OCR RESULT ERROR:", err);
     res.status(500).json({

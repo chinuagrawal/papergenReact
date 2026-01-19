@@ -1,92 +1,102 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-/* ---------- AUTO EXPANDING TEXTAREA ---------- */
-function AutoTextarea({ value, onChange, placeholder }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.height = "auto";
-      ref.current.style.height = ref.current.scrollHeight + "px";
-    }
-  }, [value]);
-
-  return (
-    <textarea
-      ref={ref}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      rows={1}
-      style={{
-        width: "100%",
-        resize: "none",
-        overflow: "hidden",
-        padding: "14px",
-        fontSize: "15px",
-        lineHeight: "1.7",
-        borderRadius: 10,
-        border: "1px solid #e5e7eb",
-        background: "#ffffff",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-      }}
-    />
-  );
-}
-
-/* ---------- MAIN REVIEW PAGE ---------- */
 export default function AdminOcrReview() {
   const { jobId, chapterId } = useParams();
 
   const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState("processing");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
-  /* ---------- LOAD OCR RESULT ---------- */
+  /* ---------------- FETCH OCR RESULT ---------------- */
+  const fetchOcrResult = async () => {
+    const res = await fetch(`${API}/ocr-result/${jobId}`);
+    const data = await res.json();
+
+    if (data.status !== "completed") {
+      setStatus(data.status);
+      return;
+    }
+
+    setStatus("completed");
+
+    // normalize questions (ensure required fields)
+    const normalized = (data.questions || []).map(q => ({
+      questionText: q.questionText || "",
+      answer: q.answer || "",
+      marks: q.marks || "",
+      type: q.type || "Short"
+    }));
+
+    setQuestions(normalized);
+  };
+
+  /* ---------------- POLLING ---------------- */
   useEffect(() => {
-    fetch(`${API}/ocr-result/${jobId}`)
-      .then(res => res.json())
-      .then(data => {
-        setQuestions(data.questions || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [jobId]);
+  let intervalId;
 
-  /* ---------- HELPERS ---------- */
-  const updateQuestion = (idx, field, value) => {
-    const copy = [...questions];
-    copy[idx][field] = value;
-    setQuestions(copy);
+  const startPolling = async () => {
+    const res = await fetch(`${API}/ocr-result/${jobId}`);
+    const data = await res.json();
+
+    if (data.status === "completed") {
+      setStatus("completed");
+
+      // 👇 SET QUESTIONS ONLY ONCE
+      setQuestions(
+        (data.questions || []).map(q => ({
+          questionText: q.questionText || "",
+          answer: q.answer || "",
+          marks: q.marks || "",
+          type: q.type || "Short"
+        }))
+      );
+
+      // ❌ STOP POLLING
+      clearInterval(intervalId);
+    } else {
+      setStatus(data.status);
+    }
+  };
+
+  startPolling();
+  intervalId = setInterval(startPolling, 4000);
+
+  return () => clearInterval(intervalId);
+}, [jobId]);
+
+
+  /* ---------------- HELPERS ---------------- */
+  const updateQuestion = (index, field, value) => {
+    setQuestions(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
   };
 
   const addQuestion = () => {
-    setQuestions([
-      ...questions,
+    setQuestions(prev => [
+      ...prev,
       {
         questionText: "",
         answer: "",
         marks: "",
-        type: "Short",
-      },
+        type: "Short"
+      }
     ]);
   };
 
-  const deleteQuestion = idx => {
-    const copy = [...questions];
-    copy.splice(idx, 1);
-    setQuestions(copy);
+  const deleteQuestion = index => {
+    if (!window.confirm("Delete this question?")) return;
+    setQuestions(prev => prev.filter((_, i) => i !== index));
   };
 
-  /* ---------- SAVE ---------- */
+  /* ---------------- SAVE ---------------- */
   const saveQuestions = async () => {
     setSaving(true);
-    setMessage("");
 
     const res = await fetch(`${API}/save-questions`, {
       method: "POST",
@@ -94,155 +104,146 @@ export default function AdminOcrReview() {
       body: JSON.stringify({
         jobId,
         chapterId,
-        questions,
-      }),
+        questions
+      })
     });
 
     const data = await res.json();
-    setMessage(data.success ? "✅ Questions saved successfully" : "❌ Save failed");
     setSaving(false);
+
+    if (data.success) {
+      alert("✅ Questions saved successfully");
+    } else {
+      alert("❌ Save failed");
+    }
   };
 
-  if (loading) {
-    return <p style={{ padding: 40 }}>Loading OCR preview…</p>;
+  /* ---------------- LOADING ---------------- */
+  if (status !== "completed") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-xl shadow">
+          <h2 className="text-lg font-semibold">⏳ OCR is processing…</h2>
+          <p className="text-gray-500 mt-2">
+            Please wait, large PDFs may take up to a minute
+          </p>
+        </div>
+      </div>
+    );
   }
 
+  /* ---------------- UI ---------------- */
   return (
-    <div
-      style={{
-        padding: 40,
-        maxWidth: 1200,
-        margin: "auto",
-        background: "#f3f4f6",
-        minHeight: "100vh",
-      }}
-    >
-      <h1 style={{ marginBottom: 30 }}>
-        📄 OCR Review – Job {jobId}
-      </h1>
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-7xl mx-auto">
 
-      {questions.map((q, idx) => (
-        <div
-          key={idx}
-          style={{
-            background: "#ffffff",
-            borderRadius: 14,
-            padding: 26,
-            marginBottom: 26,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-          }}
-        >
-          {/* QUESTION */}
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 600 }}>Question</label>
-            <AutoTextarea
-              value={q.questionText}
-              onChange={e =>
-                updateQuestion(idx, "questionText", e.target.value)
-              }
-            />
-          </div>
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">
+            📄 OCR Review – Job {jobId}
+          </h1>
 
-          {/* ANSWER */}
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ fontWeight: 600 }}>Answer</label>
-            <AutoTextarea
-              value={q.answer || ""}
-              onChange={e =>
-                updateQuestion(idx, "answer", e.target.value)
-              }
-            />
-          </div>
-
-          {/* META */}
-          <div style={{ display: "flex", gap: 14 }}>
-            <input
-              type="number"
-              placeholder="Marks"
-              value={q.marks || ""}
-              onChange={e =>
-                updateQuestion(idx, "marks", e.target.value)
-              }
-              style={{
-                width: 100,
-                padding: 10,
-                borderRadius: 8,
-                border: "1px solid #ddd",
-              }}
-            />
-
-            <select
-              value={q.type}
-              onChange={e =>
-                updateQuestion(idx, "type", e.target.value)
-              }
-              style={{
-                padding: 10,
-                borderRadius: 8,
-                border: "1px solid #ddd",
-              }}
+          <div className="flex gap-3">
+            <button
+              onClick={addQuestion}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              <option>Very Short</option>
-              <option>Short</option>
-              <option>Long</option>
-            </select>
+              ➕ Add Question
+            </button>
 
             <button
-              onClick={() => deleteQuestion(idx)}
-              style={{
-                marginLeft: "auto",
-                background: "#fee2e2",
-                color: "#b91c1c",
-                border: "none",
-                padding: "10px 14px",
-                borderRadius: 8,
-                cursor: "pointer",
-              }}
+              onClick={saveQuestions}
+              disabled={saving}
+              className={`px-6 py-2 rounded-lg text-white ${
+                saving
+                  ? "bg-gray-400"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              🗑 Delete
+              {saving ? "Saving…" : "💾 Save"}
             </button>
           </div>
         </div>
-      ))}
 
-      {/* ACTION BAR */}
-      <div style={{ marginTop: 30 }}>
-        <button
-          onClick={addQuestion}
-          style={{
-            padding: "12px 18px",
-            borderRadius: 10,
-            border: "none",
-            background: "#2563eb",
-            color: "#fff",
-            fontSize: 15,
-            cursor: "pointer",
-          }}
-        >
-          ➕ Add Question
-        </button>
+        {/* QUESTIONS */}
+        <div className="space-y-6">
+          {questions.map((q, idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-xl shadow p-6 border"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-semibold text-lg">
+                  Question {idx + 1}
+                </h2>
+                <button
+                  onClick={() => deleteQuestion(idx)}
+                  className="text-red-600 hover:underline"
+                >
+                  🗑 Delete
+                </button>
+              </div>
 
-        <button
-          onClick={saveQuestions}
-          disabled={saving}
-          style={{
-            marginLeft: 14,
-            padding: "12px 18px",
-            borderRadius: 10,
-            border: "none",
-            background: "#16a34a",
-            color: "#fff",
-            fontSize: 15,
-            cursor: "pointer",
-          }}
-        >
-          {saving ? "Saving…" : "💾 Save All"}
-        </button>
+              {/* QUESTION TEXT */}
+              <textarea
+                className="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500"
+                rows={Math.max(3, q.questionText.length / 80)}
+                placeholder="Enter question text"
+                value={q.questionText}
+                onChange={e =>
+                  updateQuestion(idx, "questionText", e.target.value)
+                }
+              />
+
+              {/* META ROW */}
+              <div className="flex gap-4 mb-4">
+                <div>
+                  <label className="block text-sm text-gray-600">
+                    Marks
+                  </label>
+                  <input
+                    type="number"
+                    className="border rounded-lg px-3 py-2 w-24"
+                    value={q.marks}
+                    onChange={e =>
+                      updateQuestion(idx, "marks", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-gray-600">
+                    Type
+                  </label>
+                  <select
+                    className="border rounded-lg px-3 py-2"
+                    value={q.type}
+                    onChange={e =>
+                      updateQuestion(idx, "type", e.target.value)
+                    }
+                  >
+                    <option>Very Short</option>
+                    <option>Short</option>
+                    <option>Long</option>
+                    <option>Numerical</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* ANSWER */}
+              <textarea
+                className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-green-500"
+                rows={Math.max(4, q.answer.length / 80)}
+                placeholder="Answer"
+                value={q.answer}
+                onChange={e =>
+                  updateQuestion(idx, "answer", e.target.value)
+                }
+              />
+            </div>
+          ))}
+        </div>
       </div>
-
-      {message && (
-        <p style={{ marginTop: 16, fontWeight: 600 }}>{message}</p>
-      )}
     </div>
   );
 }

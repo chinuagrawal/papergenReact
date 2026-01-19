@@ -9,20 +9,22 @@ export async function createOCRJob(chapterId, pdfUrl) {
   );
   return rows[0];
 }
-
-export async function updateOCRJob(id, fields) {
-  const keys = Object.keys(fields);
-  const values = Object.values(fields);
-
-  const setClause = keys
-    .map((k, i) => `${k} = $${i + 1}`)
-    .join(", ");
-
+export async function updateOCRJob(
+  id,
+  status,
+  error = null,
+  outputPath = null
+) {
   await pool.query(
-    `UPDATE ocr_jobs
-     SET ${setClause}, updated_at = NOW()
-     WHERE id = $${keys.length + 1}`,
-    [...values, id]
+    `
+    UPDATE ocr_jobs
+    SET status = $1,
+        error = $2,
+        output_path = COALESCE($3, output_path),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = $4
+    `,
+    [status, error, outputPath, id]
   );
 }
 

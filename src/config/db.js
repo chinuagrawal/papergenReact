@@ -8,7 +8,7 @@ export const pool = new Pool({
 
 // Fires when a client is actually checked out
 pool.on("connect", () => {
-  console.log("🔌 PostgreSQL client connected");
+  
 });
 
 // 🔥 Explicit startup check (recommended during development)
