@@ -14,7 +14,6 @@ import { getOCRResult } from "../controllers/ocrResult.controller.js";
 /* Admin Review */
 import { getQuestionsByChapter } from "../controllers/adminQuestions.controller.js";
 import { updateQuestion } from "../controllers/updateQuestion.controller.js";
-import { updateSubQuestion } from "../controllers/updateSubQuestion.controller.js";
 import { uploadQuestionImage } from "../controllers/imageUpload.controller.js";
 import { approveOcrJob } from "../controllers/approveOcr.controller.js";
 

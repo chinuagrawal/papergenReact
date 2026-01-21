@@ -1,14 +1,20 @@
 import { pool } from "../config/db.js";
 
+/* ---------------- CREATE OCR JOB ---------------- */
 export async function createOCRJob(chapterId, pdfUrl) {
   const { rows } = await pool.query(
-    `INSERT INTO ocr_jobs (chapter_id, pdf_url, status)
-     VALUES ($1, $2, 'pending')
-     RETURNING *`,
+    `
+    INSERT INTO ocr_jobs (chapter_id, pdf_url, status)
+    VALUES ($1, $2, 'pending')
+    RETURNING *
+    `,
     [chapterId, pdfUrl]
   );
+
   return rows[0];
 }
+
+/* ---------------- UPDATE OCR JOB ---------------- */
 export async function updateOCRJob(
   id,
   status,
@@ -28,10 +34,16 @@ export async function updateOCRJob(
   );
 }
 
-export async function getOCRJob(id) {
+/* ---------------- GET OCR JOB BY ID ---------------- */
+export async function getOCRJobById(id) {
   const { rows } = await pool.query(
-    `SELECT * FROM ocr_jobs WHERE id = $1`,
+    `
+    SELECT *
+    FROM ocr_jobs
+    WHERE id = $1
+    `,
     [id]
   );
+
   return rows[0];
 }

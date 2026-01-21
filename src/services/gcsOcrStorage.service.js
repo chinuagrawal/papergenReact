@@ -9,39 +9,33 @@ const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
 /**
  * Saves final OCR JSON to YOUR bucket
  */
-export async function saveOcrJsonToGcs(jobId, pages) {
-  const prefix = `ocr-output/job-${jobId}`;
+export async function saveOcrJsonToGcs(jobId, data) {
+  const filePath = `ocr-output/job-${jobId}/questions.json`;
 
-  for (let i = 0; i < pages.length; i++) {
-    await bucket
-      .file(`${prefix}/page-${i + 1}.json`)
-      .save(JSON.stringify(pages[i], null, 2), {
-        contentType: "application/json",
-      });
-  }
+  await bucket.file(filePath).save(
+    JSON.stringify(data, null, 2),
+    { contentType: "application/json" }
+  );
 
-  return `gs://${bucket.name}/${prefix}`;
+  return `gs://${bucket.name}/${filePath}`;
 }
+
 
 /**
  * Reads OCR JSON from YOUR bucket
  */
+/**
+ * Reads FINAL AI-processed OCR JSON from GCS
+ */
 export async function readOcrJsonFromGcs(jobId) {
-  const prefix = `ocr-output/job-${jobId}/`;
+  const filePath = `ocr-output/job-${jobId}/questions.json`;
+  const file = bucket.file(filePath);
 
-  const [files] = await bucket.getFiles({ prefix });
-  const jsonFiles = files.filter(f => f.name.endsWith(".json"));
-
-  if (!jsonFiles.length) {
+  const [exists] = await file.exists();
+  if (!exists) {
     throw new Error("OCR output not found in GCS");
   }
 
-  const pages = [];
-
-  for (const file of jsonFiles) {
-    const [buf] = await file.download();
-    pages.push(JSON.parse(buf.toString()));
-  }
-
-  return pages;
+  const [buf] = await file.download();
+  return JSON.parse(buf.toString("utf-8"));
 }
