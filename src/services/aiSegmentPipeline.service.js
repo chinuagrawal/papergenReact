@@ -25,6 +25,7 @@ export async function extractQuestionsWithAI(ocrJsonArray) {
 
     questions.forEach(q => {
       allQuestions.push({
+        questionNumber: q.questionNumber || null,
         questionText: q.questionText,
         answer: q.answer,
         marks: q.marks,
@@ -35,6 +36,24 @@ export async function extractQuestionsWithAI(ocrJsonArray) {
       });
     });
   }
+
+  // Sort questions by questionNumber, then by page, then by original order
+  allQuestions.sort((a, b) => {
+    // First sort by question number if available
+    if (a.questionNumber && b.questionNumber) {
+      return a.questionNumber - b.questionNumber;
+    }
+    if (a.questionNumber) return -1;
+    if (b.questionNumber) return 1;
+    
+    // Then by page
+    if (a.page !== b.page) {
+      return (a.page || 0) - (b.page || 0);
+    }
+    
+    // Finally maintain original order for questions without numbers
+    return 0;
+  });
 
   return allQuestions;
 }
