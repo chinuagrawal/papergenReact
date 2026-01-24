@@ -63,8 +63,11 @@ function extractTextFromAnchor(fullText, textAnchor) {
       )
     )
     .join("")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/[ \t]+/g, " ")   // collapse spaces
+.replace(/\n{3,}/g, "\n\n") // keep line breaks
+.trim();
+
+    
 }
 
 function extractBoundingBox(boundingPoly) {
