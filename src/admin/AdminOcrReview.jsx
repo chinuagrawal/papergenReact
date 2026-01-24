@@ -170,7 +170,7 @@ export default function AdminOcrReview() {
         showToast(`✅ ${data.count || questions.length} questions saved successfully!`, "success");
         // Optionally navigate back or refresh
         setTimeout(() => {
-          navigate("/admin/review");
+          navigate("/admin/ocr-upload");
         }, 2000);
       } else {
         showToast("❌ Save failed. Please try again.", "error");
@@ -445,7 +445,7 @@ export default function AdminOcrReview() {
               </p>
               <div className="flex gap-3">
                 <button
-                  onClick={() => navigate("/admin/review")}
+                  onClick={() => navigate("/admin/ocr-upload")}
                   className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-semibold transition-colors duration-200"
                 >
                   ← Back

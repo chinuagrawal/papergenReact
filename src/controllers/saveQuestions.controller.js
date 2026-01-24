@@ -8,37 +8,46 @@ import { detectMarksAndType } from "../parser/marksAndTypeDetector.js";
 
 export async function saveExtractedQuestions(req, res) {
   try {
-    const { chapterId, ocrJobId } = req.body;
+    const { chapterId, ocrJobId, jobId, questions } = req.body;
+    const finalJobId = ocrJobId || jobId;
 
-    if (!chapterId || !ocrJobId) {
+    if (!chapterId || !finalJobId) {
       return res.status(400).json({ error: "Missing chapterId or ocrJobId" });
     }
 
-    const dir = `ocr-output/job-${ocrJobId}`;
-    const files = fs.readdirSync(dir).filter(f => f.endsWith(".json"));
+    let finalQuestions = [];
 
-    const ocrJsonArray = files.map(f =>
-      JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"))
-    );
-
-    // 🔥 Full pipeline
-    const blocks = normalizeLayout(ocrJsonArray);
-    const q1 = detectQuestions(blocks);
-    const q2 = processAnswers(q1);
-    const finalQuestions = detectMarksAndType(q2);
+    if (questions && Array.isArray(questions) && questions.length > 0) {
+      // ✅ Use questions from frontend (Admin Review)
+      finalQuestions = questions;
+    } else {
+      // ⚠️ Fallback to file system (only if no questions provided)
+      const dir = `ocr-output/job-${finalJobId}`;
+      if (fs.existsSync(dir)) {
+        const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json"));
+        const ocrJsonArray = files.map((f) =>
+          JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")),
+        );
+        // 🔥 Full pipeline
+        const blocks = normalizeLayout(ocrJsonArray);
+        const q1 = detectQuestions(blocks);
+        const q2 = processAnswers(q1);
+        finalQuestions = detectMarksAndType(q2);
+      }
+    }
 
     await saveQuestions({
       chapterId,
-      ocrJobId,
-      questions: finalQuestions
+      ocrJobId: finalJobId,
+      questions: finalQuestions,
     });
 
     res.json({
       success: true,
-      count: finalQuestions.length
+      count: finalQuestions.length,
     });
-
   } catch (err) {
+    console.error("Save error:", err);
     res.status(500).json({ error: "Failed to save questions" });
   }
 }

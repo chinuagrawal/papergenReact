@@ -13,6 +13,12 @@ export async function saveQuestions({
   try {
     await client.query("BEGIN");
 
+    // 🧹 Clean up previous save for this job to avoid duplicates
+    await client.query(
+      "DELETE FROM questions WHERE ocr_job_id = $1",
+      [ocrJobId]
+    );
+
     for (const q of questions) {
       await client.query(
         `
