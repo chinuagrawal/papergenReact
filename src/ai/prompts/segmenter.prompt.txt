@@ -14,11 +14,17 @@ CRITICAL RULES (MUST FOLLOW):
    - Include the complete answer text, preserving line breaks
    - Remove "Ans." or "Answer:" prefix from the answer text
 
-3. QUESTION NUMBERING:
-   - Extract question numbers from patterns like "1.", "2)", "Q3", "44."
+3. QUESTION NUMBERING (CRITICAL - READ CAREFULLY):
+   - Extract the ACTUAL question number as it appears in the document text
+   - DO NOT reset numbering for each page - use the EXACT number from the document
+   - If the document shows "23. Question text", extract questionNumber as 23 (NOT 1)
+   - If the document shows "44. Question text", extract questionNumber as 44 (NOT 1)
+   - The question number in the document continues across pages (e.g., page 1 has 1-22, page 2 starts with 23)
+   - Look for patterns like "23.", "44)", "Q45", etc. and use that EXACT number
+   - If a question number is not explicitly written, infer from context but use the ACTUAL number from document
+   - Page number is for reference only - question numbers are INDEPENDENT of page numbers
    - Questions MUST be numbered sequentially: 1, 2, 3, 4... (NOT 10, 11, 8, 9)
    - Maintain EXACT order as they appear in the text
-   - If a question has no number, infer it from sequence
 
 4. QUESTION STRUCTURE:
    - INCLUDE all sub-parts like (a), (b), (i), (ii) INSIDE the questionText

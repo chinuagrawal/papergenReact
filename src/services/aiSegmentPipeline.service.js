@@ -10,13 +10,19 @@ export async function extractQuestionsWithAI(ocrJsonArray) {
   const blocks = normalizeLayout(ocrJsonArray);
   const pages = groupBlocksByPage(blocks);
 
+  // Sort pages by page number to process in order
+  pages.sort((a, b) => a.page - b.page);
+
   const allQuestions = [];
+  let lastQuestionNumber = 0;
 
   for (const page of pages) {
     // 🔥 AI now returns ARRAY directly
+    // Pass lastQuestionNumber as context (but AI should use actual numbers from document)
     const questions = await segmentQuestionsAI(
       page.page,
-      page.blocks
+      page.blocks,
+      lastQuestionNumber
     );
 
     if (!Array.isArray(questions)) {
@@ -24,6 +30,11 @@ export async function extractQuestionsWithAI(ocrJsonArray) {
     }
 
     questions.forEach(q => {
+      // Track the highest question number for context on next page
+      if (q.questionNumber && q.questionNumber > lastQuestionNumber) {
+        lastQuestionNumber = q.questionNumber;
+      }
+
       allQuestions.push({
         questionNumber: q.questionNumber || null,
         questionText: q.questionText,
@@ -35,6 +46,18 @@ export async function extractQuestionsWithAI(ocrJsonArray) {
         page: page.page,
       });
     });
+  }
+
+  // Post-process: Extract question numbers from questionText if missing
+  // This is a fallback in case AI didn't extract the number properly
+  for (const q of allQuestions) {
+    if (!q.questionNumber) {
+      // Try to extract number from questionText as fallback
+      const numMatch = q.questionText.match(/^(\d+)[\.\)\:\-]\s*/);
+      if (numMatch) {
+        q.questionNumber = parseInt(numMatch[1], 10);
+      }
+    }
   }
 
   // Sort questions by questionNumber, then by page, then by original order

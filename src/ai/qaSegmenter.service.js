@@ -6,7 +6,7 @@ const client = new OpenAI({
 
 /* ---------------- PROMPT BUILDER ---------------- */
 
-function buildPrompt(pageNumber, blocks) {
+function buildPrompt(pageNumber, blocks, lastQuestionNumber = 0) {
   const textWithNewlines = blocks
     .map(b => b.text)
     .join("\n");
@@ -27,11 +27,15 @@ CRITICAL RULES (MUST FOLLOW):
    - If no answer is present, leave answer field as empty string ""
    - Include the complete answer text, preserving line breaks
 
-3. QUESTION NUMBERING:
-   - Extract question numbers from patterns like "1.", "2)", "Q3", "44."
-   - Questions should be numbered sequentially: 1, 2, 3, 4...
-   - Maintain EXACT order as they appear in the text
-   - If a question has no number, infer it from sequence
+3. QUESTION NUMBERING (CRITICAL - READ CAREFULLY):
+   - Extract the ACTUAL question number as it appears in the document text
+   - DO NOT reset numbering for each page - use the EXACT number from the document
+   - If the document shows "23. Question text", extract questionNumber as 23 (NOT 1)
+   - If the document shows "44. Question text", extract questionNumber as 44 (NOT 1)
+   - The question number in the document continues across pages (e.g., page 1 has 1-22, page 2 starts with 23)
+   - Look for patterns like "23.", "44)", "Q45", etc. and use that EXACT number
+   - If a question number is not explicitly written, infer from context but use the ACTUAL number from document
+   - Page number is for reference only - question numbers are INDEPENDENT of page numbers
 
 4. QUESTION STRUCTURE:
    - INCLUDE all sub-parts like (a), (b), (i), (ii) INSIDE the questionText
@@ -53,7 +57,7 @@ OUTPUT FORMAT (STRICT JSON, no markdown):
 {
   "questions": [
     {
-      "questionNumber": number (extracted from question, e.g., 1, 2, 44),
+      "questionNumber": number (EXACT number from document, e.g., if document says "23.", use 23),
       "questionText": "Only the question text, no answer, no 'Ans.' prefix, no question number",
       "answer": "Only the answer text, no 'Ans.' prefix",
       "marks": number or null,
@@ -66,7 +70,7 @@ OUTPUT FORMAT (STRICT JSON, no markdown):
 
 EXAMPLES:
 
-Input: "1. What is nationalism? Ans. Nationalism is..."
+Input (Page 1): "1. What is nationalism? Ans. Nationalism is..."
 Output: {
   "questionNumber": 1,
   "questionText": "What is nationalism?",
@@ -77,9 +81,9 @@ Output: {
   "confidence": 0.9
 }
 
-Input: "44. Explain conditions. Ans. The conditions were..."
+Input (Page 2): "23. Explain conditions. Ans. The conditions were..."
 Output: {
-  "questionNumber": 44,
+  "questionNumber": 23,  // ← Use 23, NOT 1, because that's what the document says
   "questionText": "Explain conditions.",
   "answer": "The conditions were...",
   "marks": null,
@@ -88,7 +92,22 @@ Output: {
   "confidence": 0.9
 }
 
-Page number: ${pageNumber}
+Input (Page 3): "44. Describe the process. Ans. The process..."
+Output: {
+  "questionNumber": 44,  // ← Use 44, NOT 1, because that's what the document says
+  "questionText": "Describe the process.",
+  "answer": "The process...",
+  "marks": null,
+  "type": "Long",
+  "year": null,
+  "confidence": 0.9
+}
+
+IMPORTANT CONTEXT:
+- Current page: ${pageNumber}
+${lastQuestionNumber > 0 ? `- Previous pages ended at question ${lastQuestionNumber} (for reference only - use ACTUAL numbers from document)` : '- This is the first page'}
+- Question numbers in the document are CONTINUOUS across pages
+- Extract the EXACT question number as written in the document, regardless of which page it's on
 
 TEXT TO PROCESS:
 """
@@ -108,8 +127,8 @@ function cleanJson(text) {
 
 /* ---------------- AI SEGMENTER ---------------- */
 
-export async function segmentQuestionsAI(pageNumber, blocks) {
-  const prompt = buildPrompt(pageNumber, blocks);
+export async function segmentQuestionsAI(pageNumber, blocks, lastQuestionNumber = 0) {
+  const prompt = buildPrompt(pageNumber, blocks, lastQuestionNumber);
 
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",
@@ -117,7 +136,7 @@ export async function segmentQuestionsAI(pageNumber, blocks) {
     messages: [
       { 
         role: "system", 
-        content: "You are an expert at extracting CBSE exam questions. You MUST separate questions from answers. NEVER include 'Ans.' or answer text in questionText. Always maintain sequential question numbering (1, 2, 3...)." 
+        content: "You are an expert at extracting CBSE exam questions. You MUST separate questions from answers. NEVER include 'Ans.' or answer text in questionText. CRITICAL: Extract the EXACT question number as written in the document - question numbers continue across pages (e.g., if document shows '23.', use 23, NOT 1). Do NOT reset numbering for each page." 
       },
       { role: "user", content: prompt }
     ],
