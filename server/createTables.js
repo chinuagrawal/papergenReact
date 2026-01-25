@@ -26,6 +26,11 @@ const pool = new Pool({
   },
 });
 
+// Handle idle client errors
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client (createTables)", err);
+});
+
 const sql = `
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -78,6 +83,8 @@ ALTER TABLE questions ADD COLUMN IF NOT EXISTS qtype VARCHAR(20);
 ALTER TABLE questions ADD COLUMN IF NOT EXISTS question_type VARCHAR(20);
 ALTER TABLE questions ADD COLUMN IF NOT EXISTS chapter_id INTEGER;
 ALTER TABLE questions ADD COLUMN IF NOT EXISTS difficulty VARCHAR(20);
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS question_image TEXT;
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS answer_image TEXT;
 
 CREATE TABLE IF NOT EXISTS question_images (
   id SERIAL PRIMARY KEY,
@@ -89,6 +96,10 @@ CREATE TABLE IF NOT EXISTS question_images (
 
 (async () => {
   const client = await pool.connect();
+  client.on("error", (err) => {
+    console.error("Database client error during migration:", err);
+  });
+
   try {
     console.log(
       "Running migrations on:",

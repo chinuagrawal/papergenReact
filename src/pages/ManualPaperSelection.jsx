@@ -186,12 +186,31 @@ function ManualPaperSelection() {
                             <span className="font-bold mr-2">{idx + 1}.</span>
                             {q.question_text || q.questionText}
                           </p>
+
                           {q.marks && (
-                            <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded print:text-black print:bg-transparent print:border print:border-black">
+                            <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded print:text-black print:bg-transparent print:border print:border-black whitespace-nowrap ml-2">
                               [{q.marks} Marks]
                             </span>
                           )}
                         </div>
+
+                        {/* Display Question Image if available - Moved below question text for better visibility */}
+                        {(q.question_image || q.questionImage) && (
+                          <div className="mt-3 mb-4 w-full">
+                            <img
+                              src={q.question_image || q.questionImage}
+                              alt={`Question ${idx + 1}`}
+                              className="max-w-full md:max-w-xs h-auto max-h-52 object-contain rounded border border-gray-200 bg-white"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                console.error(
+                                  "Failed to load question image:",
+                                  e.target.src,
+                                );
+                              }}
+                            />
+                          </div>
+                        )}
                         {/* Answer (Optional - maybe toggleable?) */}
                         {/* <p className="mt-2 text-gray-500 text-sm italic">Ans: {q.answer_text}</p> */}
                       </div>

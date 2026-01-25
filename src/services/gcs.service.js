@@ -25,6 +25,31 @@ export async function uploadToGCS(localPath, destination) {
 }
 
 /**
+ * Upload Buffer to GCS (for images)
+ * Returns public HTTP URL
+ */
+export async function uploadBufferToGCS(buffer, mimeType) {
+  const filename = `images/${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  const file = bucket.file(filename);
+
+  await file.save(buffer, {
+    contentType: mimeType,
+    resumable: false,
+  });
+
+  // Make the file public (Requires 'Fine-grained' access control on bucket)
+  try {
+    await file.makePublic();
+  } catch (err) {
+    console.warn(
+      `⚠️ Failed to make file public: ${filename}. Ensure bucket has 'Fine-grained' access control. Error: ${err.message}`,
+    );
+  }
+
+  return `https://storage.googleapis.com/${bucket.name}/${filename}`;
+}
+
+/**
  * Upload JSON object directly to GCS
  * (used for AI output)
  */
