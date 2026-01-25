@@ -1,0 +1,26 @@
+@media print {
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: white;
+  }
+
+  /* Ensure no scrollbars in print */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Force page breaks if needed */
+  h2 {
+    page-break-after: avoid;
+  }
+  
+  .question-item {
+    page-break-inside: avoid;
+  }
+}

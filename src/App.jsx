@@ -10,7 +10,8 @@ import "./App.css";
 import AdminMasterData from "./admin/AdminMasterData";
 import AdminOcrUpload from "./admin/AdminOcrUpload";
 import AdminOcrReview from "./admin/AdminOcrReview";
-
+import PaperGeneration from "./pages/PaperGeneration";
+import ManualPaperSelection from "./pages/ManualPaperSelection";
 
 function App() {
   return (
@@ -22,14 +23,19 @@ function App() {
         <Route path="/Login" element={<Loginpage />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/selectedBooks" element={<BooksPage />} />
+        <Route path="/generate-paper" element={<PaperGeneration />} />
+        <Route
+          path="/manual-paper-selection"
+          element={<ManualPaperSelection />}
+        />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/admin/master" element={<AdminMasterData />} />
+
         <Route path="/admin/ocr-upload" element={<AdminOcrUpload />} />
         <Route
-  path="/admin/ocr-review/:jobId/:chapterId"
-  element={<AdminOcrReview />}
-/>
-
+          path="/admin/ocr-review/:jobId/:chapterId"
+          element={<AdminOcrReview />}
+        />
       </Routes>
     </BrowserRouter>
   );

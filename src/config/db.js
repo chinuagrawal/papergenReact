@@ -2,8 +2,13 @@ import pg from "pg";
 const { Pool } = pg;
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || process.env.PG_CONNECTION,
   ssl: { rejectUnauthorized: false } // required for Neon / cloud PG
+});
+
+// Handle idle client errors to prevent crash
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client (src/config/db)", err);
 });
 
 // Fires when a client is actually checked out

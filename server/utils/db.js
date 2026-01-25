@@ -12,6 +12,13 @@ const pool = new Pool({
   // optional: increase idle timeout / connection limits for production
   // max: 20,
   // idleTimeoutMillis: 30000,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client (utils/db)', err);
 });
 
 async function insertDocument({ userId = null, filename, gcsUri, mimeType = null }) {

@@ -21,6 +21,12 @@ const pool = new Pool({
   },
 });
 
+// Handle idle client errors to prevent crash
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client", err);
+  // Do not exit the process, let the pool handle reconnection of new clients
+});
+
 // Test DB Connection
 pool
   .connect()
@@ -169,6 +175,45 @@ app.post("/api/save-role", async (req, res) => {
   }
 });
 
+// ========== GET QUESTIONS BY CHAPTERS ==========
+app.post("/api/get-questions-by-chapters", async (req, res) => {
+  try {
+    const { chapterIds } = req.body;
+    if (!chapterIds || !Array.isArray(chapterIds) || chapterIds.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid chapterIds" });
+    }
+
+    // Convert to integers just in case
+    const ids = chapterIds.map((id) => parseInt(id)).filter((id) => !isNaN(id));
+
+    if (ids.length === 0) {
+      return res.json({ success: true, questions: [] });
+    }
+
+    const query = `
+      SELECT * FROM questions 
+      WHERE chapter_id = ANY($1::int[]) 
+      ORDER BY 
+        CASE 
+          WHEN COALESCE(qtype, question_type) ILIKE '%Very Short%' THEN 1
+          WHEN COALESCE(qtype, question_type) ILIKE '%Short%' THEN 2
+          WHEN COALESCE(qtype, question_type) ILIKE '%Long%' THEN 3
+          WHEN COALESCE(qtype, question_type) ILIKE '%MCQ%' THEN 4
+          ELSE 5 
+        END, 
+        id
+    `;
+
+    const result = await pool.query(query, [ids]);
+
+    res.json({ success: true, questions: result.rows });
+  } catch (err) {
+    console.error("Get Questions Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
