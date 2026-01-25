@@ -13,6 +13,7 @@ function ManualPaperSelection() {
   const [questions, setQuestions] = useState([]);
   const [groupedQuestions, setGroupedQuestions] = useState({});
   const [selectedQuestionIds, setSelectedQuestionIds] = useState(new Set());
+  const [includeAnswers, setIncludeAnswers] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -125,6 +126,19 @@ function ManualPaperSelection() {
           >
             Back
           </button>
+
+          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 select-none">
+            <input
+              type="checkbox"
+              checked={includeAnswers}
+              onChange={(e) => setIncludeAnswers(e.target.checked)}
+              className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700 font-medium">
+              Include Answer Key
+            </span>
+          </label>
+
           <button
             onClick={handlePrint}
             disabled={selectedQuestionIds.size === 0}
@@ -225,6 +239,71 @@ function ManualPaperSelection() {
         {questions.length === 0 && !loading && (
           <div className="text-center text-gray-400 py-10">
             No questions available for the selected chapters.
+          </div>
+        )}
+
+        {/* Answer Key Section */}
+        {includeAnswers && selectedQuestionIds.size > 0 && (
+          <div
+            className="hidden print:block mt-8 pt-8 border-t-2 border-gray-800"
+            style={{ pageBreakBefore: "always" }}
+          >
+            <div className="text-center mb-8 border-b pb-4">
+              <h1 className="text-3xl font-bold uppercase tracking-wide">
+                Answer Key
+              </h1>
+            </div>
+
+            <div className="space-y-6">
+              {Object.entries(groupedQuestions).map(([type, qs]) => {
+                // Filter questions to only include selected ones
+                const selectedQs = qs.filter((q) =>
+                  selectedQuestionIds.has(q.id),
+                );
+
+                if (selectedQs.length === 0) return null;
+
+                return (
+                  <div key={type} className="mb-6">
+                    <h3 className="text-lg font-bold text-gray-800 border-b border-gray-300 pb-1 mb-3 uppercase">
+                      {type} Answer Questions
+                    </h3>
+                    <div className="space-y-3">
+                      {selectedQs.map((q, idx) => (
+                        <div key={q.id} className="flex gap-2 text-sm">
+                          <span className="font-bold whitespace-nowrap">
+                            {idx + 1}.
+                          </span>
+                          <div>
+                            {/* Answer Text */}
+                            {q.answer_text || q.answerText ? (
+                              <div className="text-gray-900 font-medium whitespace-pre-wrap">
+                                {q.answer_text || q.answerText}
+                              </div>
+                            ) : (
+                              <div className="text-gray-400 italic">
+                                No answer text provided
+                              </div>
+                            )}
+
+                            {/* Answer Image */}
+                            {(q.answer_image || q.answerImage) && (
+                              <div className="mt-2">
+                                <img
+                                  src={q.answer_image || q.answerImage}
+                                  alt={`Answer ${idx + 1}`}
+                                  className="max-w-xs h-auto max-h-40 object-contain rounded border border-gray-200"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
