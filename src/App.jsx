@@ -15,7 +15,7 @@ import ManualPaperSelection from "./pages/ManualPaperSelection";
 
 function App() {
   return (
-    <BrowserRouter basename="/papergenReact">
+    <BrowserRouter basename="/">
       <Routes>
         <Route path="/" element={<OtpLogin />} />
         <Route path="/admin/review" element={<AdminReviewPanel />} />
