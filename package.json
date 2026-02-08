@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node server/bootstrap.js",
+    "server": "node server/server.js",
     "worker": "node src/workers/ocr.worker.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"

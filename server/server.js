@@ -1,3 +1,4 @@
+import "dotenv/config";
 import app from "./app.js";
 import pg from "pg";
 import axios from "axios";
