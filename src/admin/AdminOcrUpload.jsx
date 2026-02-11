@@ -218,9 +218,17 @@ export default function AdminOcrUpload() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6 mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Upload PDF for OCR
-          </h1>
+          <div className="flex justify-between items-center mb-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Upload PDF for OCR
+            </h1>
+            <button
+              onClick={() => navigate("/admin/master")}
+              className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-medium hover:bg-indigo-100 transition-colors border border-indigo-200 text-sm"
+            >
+              Manage Master Data
+            </button>
+          </div>
           <p className="text-gray-600">
             Select board, class, subject, book, and chapter, then upload your PDF file
           </p>

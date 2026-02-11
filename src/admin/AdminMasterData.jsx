@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../services/masterDataApi";
 
 export default function AdminMasterData() {
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -69,14 +71,39 @@ export default function AdminMasterData() {
 
   return (
     <div style={{ padding: 20, maxWidth: 800 }}>
-      <h2>Admin – Master Data (Syllabus)</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20,
+        }}
+      >
+        <h2 style={{ margin: 0 }}>Admin – Master Data (Syllabus)</h2>
+        <button
+          onClick={() => navigate("/admin/ocr-upload")}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "#4F46E5",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "500",
+          }}
+        >
+          Go to PDF Upload
+        </button>
+      </div>
 
       {/* ---------------- BOARD ---------------- */}
       <h3>Board</h3>
-      <select value={boardId} onChange={e => setBoardId(e.target.value)}>
+      <select value={boardId} onChange={(e) => setBoardId(e.target.value)}>
         <option value="">Select Board</option>
-        {boards.map(b => (
-          <option key={b.id} value={b.id}>{b.name}</option>
+        {boards.map((b) => (
+          <option key={b.id} value={b.id}>
+            {b.name}
+          </option>
         ))}
       </select>
 
@@ -84,7 +111,7 @@ export default function AdminMasterData() {
         <input
           placeholder="New board name"
           value={boardName}
-          onChange={e => setBoardName(e.target.value)}
+          onChange={(e) => setBoardName(e.target.value)}
         />
         <button
           onClick={async () => {
@@ -101,10 +128,12 @@ export default function AdminMasterData() {
       {boardId && (
         <>
           <h3>Class</h3>
-          <select value={classId} onChange={e => setClassId(e.target.value)}>
+          <select value={classId} onChange={(e) => setClassId(e.target.value)}>
             <option value="">Select Class</option>
-            {classes.map(c => (
-              <option key={c.id} value={c.id}>{c.class_name}</option>
+            {classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.class_name}
+              </option>
             ))}
           </select>
 
@@ -112,7 +141,7 @@ export default function AdminMasterData() {
             <input
               placeholder="New class (e.g. 9)"
               value={className}
-              onChange={e => setClassName(e.target.value)}
+              onChange={(e) => setClassName(e.target.value)}
             />
             <button
               onClick={async () => {
@@ -131,10 +160,15 @@ export default function AdminMasterData() {
       {classId && (
         <>
           <h3>Subject</h3>
-          <select value={subjectId} onChange={e => setSubjectId(e.target.value)}>
+          <select
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+          >
             <option value="">Select Subject</option>
-            {subjects.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
           </select>
 
@@ -142,7 +176,7 @@ export default function AdminMasterData() {
             <input
               placeholder="New subject"
               value={subjectName}
-              onChange={e => setSubjectName(e.target.value)}
+              onChange={(e) => setSubjectName(e.target.value)}
             />
             <button
               onClick={async () => {
@@ -161,10 +195,12 @@ export default function AdminMasterData() {
       {subjectId && (
         <>
           <h3>Book</h3>
-          <select value={bookId} onChange={e => setBookId(e.target.value)}>
+          <select value={bookId} onChange={(e) => setBookId(e.target.value)}>
             <option value="">Select Book</option>
-            {books.map(b => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+            {books.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
             ))}
           </select>
 
@@ -172,7 +208,7 @@ export default function AdminMasterData() {
             <input
               placeholder="New book"
               value={bookName}
-              onChange={e => setBookName(e.target.value)}
+              onChange={(e) => setBookName(e.target.value)}
             />
             <button
               onClick={async () => {
@@ -193,7 +229,7 @@ export default function AdminMasterData() {
           <h3>Chapter</h3>
 
           <ul>
-            {chapters.map(ch => (
+            {chapters.map((ch) => (
               <li key={ch.id}>
                 {ch.chapter_number}. {ch.name}
               </li>
@@ -205,12 +241,12 @@ export default function AdminMasterData() {
               type="number"
               placeholder="Chapter no."
               value={chapterNumber}
-              onChange={e => setChapterNumber(e.target.value)}
+              onChange={(e) => setChapterNumber(e.target.value)}
             />
             <input
               placeholder="Chapter name"
               value={chapterName}
-              onChange={e => setChapterName(e.target.value)}
+              onChange={(e) => setChapterName(e.target.value)}
             />
             <button
               onClick={async () => {
