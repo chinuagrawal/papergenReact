@@ -6,12 +6,17 @@
 export function normalizeLayout(ocrJsonArray) {
   const blocks = [];
 
+  let runningPageCount = 0;
+
   for (const shard of ocrJsonArray) {
     const fullText = shard.text || "";
     const pages = shard.pages || [];
 
     pages.forEach((page, pageIndex) => {
-      const pageNumber = pageIndex + 1;
+      // Use explicit pageNumber if available, otherwise calculate from running count
+      const pageNumber = page.pageNumber || (runningPageCount + 1);
+      runningPageCount++;
+
 
       // Use best available structural unit
       const elements =

@@ -25,6 +25,9 @@ export async function fetchRawOCRJson(outputPrefix) {
 
   const jsonFiles = files.filter(f => f.name.endsWith(".json"));
 
+  // Sort files to ensure shards are processed in order
+  jsonFiles.sort((a, b) => a.name.localeCompare(b.name));
+
   if (!jsonFiles.length) {
     throw new Error("No OCR output JSON found");
   }

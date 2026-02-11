@@ -7,9 +7,7 @@ const client = new OpenAI({
 /* ---------------- PROMPT BUILDER ---------------- */
 
 function buildPrompt(pageNumber, blocks, lastQuestionNumber = 0) {
-  const textWithNewlines = blocks
-    .map(b => b.text)
-    .join("\n");
+  const textWithNewlines = blocks.map((b) => b.text).join("\n");
 
   return `
 You are a CBSE exam paper extraction expert. Extract questions and answers with STRICT separation.
@@ -21,11 +19,13 @@ CRITICAL RULES (MUST FOLLOW):
    - If you see "Ans.", "Answer:", "Solution:" or similar markers, STOP at that point
    - NEVER include answer content in questionText field
    - Remove question numbers from questionText (e.g., "1. " or "Q1 " at the start)
+   - Combine "OR" alternatives into the SAME question text (e.g., "Define X. OR Define Y.")
 
 2. ANSWER EXTRACTION:
    - Extract answer text that appears AFTER "Ans.", "Answer:", "Solution:" markers
    - If no answer is present, leave answer field as empty string ""
    - Include the complete answer text, preserving line breaks
+   - Remove "Ans." or "Answer:" prefix from the answer text
 
 3. QUESTION NUMBERING (CRITICAL - READ CAREFULLY):
    - Extract the ACTUAL question number as it appears in the document text
@@ -36,19 +36,26 @@ CRITICAL RULES (MUST FOLLOW):
    - Look for patterns like "23.", "44)", "Q45", etc. and use that EXACT number
    - If a question number is not explicitly written, infer from context but use the ACTUAL number from document
    - Page number is for reference only - question numbers are INDEPENDENT of page numbers
+   - Questions MUST be numbered sequentially: 1, 2, 3, 4... (NOT 10, 11, 8, 9)
+   - Maintain EXACT order as they appear in the text
 
 4. QUESTION STRUCTURE:
    - INCLUDE all sub-parts like (a), (b), (i), (ii) INSIDE the questionText
    - PRESERVE line breaks (\\n) in both questionText and answer
    - DO NOT merge separate questions into one
    - DO NOT split one question into multiple
+   - Handle mathematical equations by keeping them in their original text form (LaTeX preferred if evident)
 
 5. METADATA EXTRACTION:
    - Extract marks from patterns like "(2 marks)", "[3]", "5 marks"
    - Extract year if mentioned (e.g., "2023", "2021")
    - Determine type: MCQ (has options a/b/c/d), Short (3 marks), Long (5+ marks), Assertion, etc.
 
-6. ORDERING:
+6. NOISE REDUCTION:
+   - Ignore page headers/footers (e.g. "Page 5", "Class X", "Subject Code")
+   - Do not extract them as questions
+
+7. ORDERING:
    - Questions MUST be in sequential order (1, 2, 3, 4... not 10, 11, 8, 9)
    - Sort by question number, not by appearance position
 
@@ -105,7 +112,7 @@ Output: {
 
 IMPORTANT CONTEXT:
 - Current page: ${pageNumber}
-${lastQuestionNumber > 0 ? `- Previous pages ended at question ${lastQuestionNumber} (for reference only - use ACTUAL numbers from document)` : '- This is the first page'}
+${lastQuestionNumber > 0 ? `- Previous pages ended at question ${lastQuestionNumber} (for reference only - use ACTUAL numbers from document)` : "- This is the first page"}
 - Question numbers in the document are CONTINUOUS across pages
 - Extract the EXACT question number as written in the document, regardless of which page it's on
 
@@ -127,18 +134,23 @@ function cleanJson(text) {
 
 /* ---------------- AI SEGMENTER ---------------- */
 
-export async function segmentQuestionsAI(pageNumber, blocks, lastQuestionNumber = 0) {
+export async function segmentQuestionsAI(
+  pageNumber,
+  blocks,
+  lastQuestionNumber = 0,
+) {
   const prompt = buildPrompt(pageNumber, blocks, lastQuestionNumber);
 
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0,
     messages: [
-      { 
-        role: "system", 
-        content: "You are an expert at extracting CBSE exam questions. You MUST separate questions from answers. NEVER include 'Ans.' or answer text in questionText. CRITICAL: Extract the EXACT question number as written in the document - question numbers continue across pages (e.g., if document shows '23.', use 23, NOT 1). Do NOT reset numbering for each page." 
+      {
+        role: "system",
+        content:
+          "You are an expert at extracting CBSE exam questions. You MUST separate questions from answers. NEVER include 'Ans.' or answer text in questionText. CRITICAL: Extract the EXACT question number as written in the document - question numbers continue across pages (e.g., if document shows '23.', use 23, NOT 1). Do NOT reset numbering for each page.",
       },
-      { role: "user", content: prompt }
+      { role: "user", content: prompt },
     ],
   });
 
@@ -164,11 +176,11 @@ export async function segmentQuestionsAI(pageNumber, blocks, lastQuestionNumber 
     // Clean questionText - remove any remaining "Ans." markers
     let questionText = (q.questionText || "").trim();
     questionText = questionText.replace(/\s+Ans\.?\s*.*$/i, "").trim();
-    
+
     // Clean answer - remove "Ans." prefix
     let answer = (q.answer || "").trim();
     answer = answer.replace(/^Ans\.?\s*/i, "").trim();
-    
+
     // Extract question number if present in questionText
     let questionNumber = q.questionNumber || null;
     if (!questionNumber) {
@@ -179,7 +191,7 @@ export async function segmentQuestionsAI(pageNumber, blocks, lastQuestionNumber 
         questionText = questionText.replace(/^\d+[\.\)\:\-]\s*/, "").trim();
       }
     }
-    
+
     return {
       questionText,
       answer,
@@ -187,7 +199,7 @@ export async function segmentQuestionsAI(pageNumber, blocks, lastQuestionNumber 
       type: q.type || "Other",
       year: q.year ?? null,
       confidence: q.confidence ?? 0.5,
-      questionNumber: questionNumber || (index + 1), // Fallback to index if no number
+      questionNumber: questionNumber || index + 1, // Fallback to index if no number
     };
   });
 }
