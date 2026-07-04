@@ -15,22 +15,48 @@ export async function getBoards(req, res) {
   res.json(result.rows);
 }
 
+/* ---------- MEDIUMS ---------- */
+export async function addMedium(req, res) {
+  const { boardId, name } = req.body;
+  const result = await pool.query(
+    "INSERT INTO mediums(board_id, name) VALUES($1,$2) RETURNING *",
+    [boardId, name]
+  );
+  res.json(result.rows[0]);
+}
+
+export async function getMediums(req, res) {
+  const { boardId } = req.query;
+  const result = await pool.query(
+    "SELECT * FROM mediums WHERE board_id=$1 ORDER BY id",
+    [boardId]
+  );
+  res.json(result.rows);
+}
+
 /* ---------- CLASSES ---------- */
 export async function addClass(req, res) {
-  const { boardId, className } = req.body;
+  const { boardId, mediumId, className } = req.body;
   const result = await pool.query(
-    "INSERT INTO classes(board_id, class_name) VALUES($1,$2) RETURNING *",
-    [boardId, className]
+    "INSERT INTO classes(board_id, medium_id, class_name) VALUES($1,$2,$3) RETURNING *",
+    [boardId, mediumId, className]
   );
   res.json(result.rows[0]);
 }
 
 export async function getClasses(req, res) {
-  const { boardId } = req.query;
-  const result = await pool.query(
-    "SELECT * FROM classes WHERE board_id=$1 ORDER BY id",
-    [boardId]
-  );
+  const { boardId, mediumId } = req.query;
+  let query = "SELECT * FROM classes WHERE board_id=$1";
+  const params = [boardId];
+  
+  if (mediumId) {
+    query += " AND medium_id=$2";
+    params.push(mediumId);
+  }
+  
+  query += " ORDER BY id";
+  
+  const result = await pool.query(query, params);
   res.json(result.rows);
 }
 

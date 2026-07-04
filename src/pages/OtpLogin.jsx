@@ -63,7 +63,7 @@ const OtpLogin = () => {
     try {
       const res = await axios.post(`${API}/api/verify-otp`, { mobile, otp });
       if (res.data.success) {
-        alert("Login successful!");
+        
         localStorage.setItem("userMobile", mobile);
         navigate("/role");
       } else alert(res.data.message || "Invalid OTP");

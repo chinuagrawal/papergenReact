@@ -92,6 +92,23 @@ CREATE TABLE IF NOT EXISTS question_images (
   gcs_uri TEXT,
   caption TEXT
 );
+
+CREATE TABLE IF NOT EXISTS mediums (
+  id SERIAL PRIMARY KEY,
+  board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
+  name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS classes (
+  id SERIAL PRIMARY KEY,
+  board_id INTEGER REFERENCES boards(id) ON DELETE CASCADE,
+  medium_id INTEGER REFERENCES mediums(id) ON DELETE CASCADE,
+  class_name VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+ALTER TABLE classes ADD COLUMN IF NOT EXISTS medium_id INTEGER REFERENCES mediums(id) ON DELETE CASCADE;
 `;
 
 (async () => {

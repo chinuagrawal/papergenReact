@@ -19,13 +19,19 @@ import { approveOcrJob } from "../controllers/approveOcr.controller.js";
 
 /* Master Data */
 import {
-  addBoard, getBoards,
-  addClass, getClasses,
-  addSubject, getSubjects,
-  addBook, getBooks,
-  addChapter, getChapters
+  addBoard,
+  getBoards,
+  addMedium,
+  getMediums,
+  addClass,
+  getClasses,
+  addSubject,
+  getSubjects,
+  addBook,
+  getBooks,
+  addChapter,
+  getChapters,
 } from "../controllers/masterData.controller.js";
-
 
 /* ---------- OCR UPLOAD ---------- */
 /**
@@ -34,8 +40,8 @@ import {
  */
 router.post(
   "/upload-pdf",
-  pdfUpload.single("pdf"),   // 🔑 THIS WAS MISSING
-  uploadChapterPDF
+  pdfUpload.single("pdf"), // 🔑 THIS WAS MISSING
+  uploadChapterPDF,
 );
 
 router.post("/run-ocr-now", async (req, res) => {
@@ -58,6 +64,9 @@ router.post("/approve-ocr", approveOcrJob);
 /* ---------- MASTER DATA ---------- */
 router.post("/boards", addBoard);
 router.get("/boards", getBoards);
+
+router.post("/mediums", addMedium);
+router.get("/mediums", getMediums);
 
 router.post("/classes", addClass);
 router.get("/classes", getClasses);
