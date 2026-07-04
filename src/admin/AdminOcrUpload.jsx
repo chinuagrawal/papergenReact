@@ -8,12 +8,14 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 export default function AdminOcrUpload() {
   const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
+  const [mediums, setMediums] = useState([]);
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [books, setBooks] = useState([]);
   const [chapters, setChapters] = useState([]);
 
   const [boardId, setBoardId] = useState("");
+  const [mediumId, setMediumId] = useState("");
   const [classId, setClassId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [bookId, setBookId] = useState("");
@@ -41,7 +43,10 @@ export default function AdminOcrUpload() {
         setBoards(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch boards:", err);
-        showToast("Failed to load boards. Please check your connection.", "error");
+        showToast(
+          "Failed to load boards. Please check your connection.",
+          "error",
+        );
         setBoards([]);
       } finally {
         setLoadingData(false);
@@ -52,9 +57,32 @@ export default function AdminOcrUpload() {
 
   useEffect(() => {
     if (boardId) {
+      const fetchMediums = async () => {
+        try {
+          const data = await api.getMediums(boardId);
+          setMediums(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.error("Failed to fetch mediums:", err);
+          showToast("Failed to load mediums.", "error");
+          setMediums([]);
+        }
+      };
+      fetchMediums();
+      setMediumId("");
+      setClassId("");
+      setSubjectId("");
+      setBookId("");
+      setChapterId("");
+    } else {
+      setMediums([]);
+    }
+  }, [boardId]);
+
+  useEffect(() => {
+    if (boardId && mediumId) {
       const fetchClasses = async () => {
         try {
-          const data = await api.getClasses(boardId);
+          const data = await api.getClasses(boardId, mediumId);
           setClasses(Array.isArray(data) ? data : []);
         } catch (err) {
           console.error("Failed to fetch classes:", err);
@@ -70,7 +98,7 @@ export default function AdminOcrUpload() {
     } else {
       setClasses([]);
     }
-  }, [boardId]);
+  }, [boardId, mediumId]);
 
   useEffect(() => {
     if (classId) {
@@ -192,7 +220,10 @@ export default function AdminOcrUpload() {
       }
     } catch (err) {
       console.error("Upload error:", err);
-      showToast(`❌ ${err.message || "Server error. Please try again."}`, "error");
+      showToast(
+        `❌ ${err.message || "Server error. Please try again."}`,
+        "error",
+      );
       setMessage(err.message || "Server error");
     } finally {
       setLoading(false);
@@ -203,13 +234,17 @@ export default function AdminOcrUpload() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-2xl transform transition-all duration-300 ${
-          toast.type === "success" 
-            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white" 
-            : "bg-gradient-to-r from-red-500 to-rose-500 text-white"
-        }`}>
+        <div
+          className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-2xl transform transition-all duration-300 ${
+            toast.type === "success"
+              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+              : "bg-gradient-to-r from-red-500 to-rose-500 text-white"
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <span className="text-xl">{toast.type === "success" ? "✓" : "✕"}</span>
+            <span className="text-xl">
+              {toast.type === "success" ? "✓" : "✕"}
+            </span>
             <span className="font-medium">{toast.message}</span>
           </div>
         </div>
@@ -230,7 +265,8 @@ export default function AdminOcrUpload() {
             </button>
           </div>
           <p className="text-gray-600">
-            Select board, class, subject, book, and chapter, then upload your PDF file
+            Select board, class, subject, book, and chapter, then upload your
+            PDF file
           </p>
         </div>
 
@@ -250,13 +286,37 @@ export default function AdminOcrUpload() {
                 </label>
                 <select
                   value={boardId}
-                  onChange={e => setBoardId(e.target.value)}
+                  onChange={(e) => setBoardId(e.target.value)}
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 font-medium bg-white"
                 >
                   <option value="">Select Board</option>
-                  {boards.map(b => (
+                  {boards.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Medium Selection */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Medium <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={mediumId}
+                  onChange={(e) => setMediumId(e.target.value)}
+                  disabled={!boardId}
+                  className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 font-medium ${
+                    !boardId
+                      ? "border-gray-200 bg-gray-100 cursor-not-allowed"
+                      : "border-gray-200 bg-white"
+                  }`}
+                >
+                  <option value="">Select Medium</option>
+                  {mediums.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
                     </option>
                   ))}
                 </select>
@@ -269,16 +329,16 @@ export default function AdminOcrUpload() {
                 </label>
                 <select
                   value={classId}
-                  onChange={e => setClassId(e.target.value)}
-                  disabled={!boardId}
+                  onChange={(e) => setClassId(e.target.value)}
+                  disabled={!boardId || !mediumId}
                   className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 font-medium ${
-                    !boardId 
-                      ? "border-gray-200 bg-gray-100 cursor-not-allowed" 
+                    !boardId || !mediumId
+                      ? "border-gray-200 bg-gray-100 cursor-not-allowed"
                       : "border-gray-200 bg-white"
                   }`}
                 >
                   <option value="">Select Class</option>
-                  {classes.map(c => (
+                  {classes.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.class_name}
                     </option>
@@ -293,16 +353,16 @@ export default function AdminOcrUpload() {
                 </label>
                 <select
                   value={subjectId}
-                  onChange={e => setSubjectId(e.target.value)}
+                  onChange={(e) => setSubjectId(e.target.value)}
                   disabled={!classId}
                   className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 font-medium ${
-                    !classId 
-                      ? "border-gray-200 bg-gray-100 cursor-not-allowed" 
+                    !classId
+                      ? "border-gray-200 bg-gray-100 cursor-not-allowed"
                       : "border-gray-200 bg-white"
                   }`}
                 >
                   <option value="">Select Subject</option>
-                  {subjects.map(s => (
+                  {subjects.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
                     </option>
@@ -317,16 +377,16 @@ export default function AdminOcrUpload() {
                 </label>
                 <select
                   value={bookId}
-                  onChange={e => setBookId(e.target.value)}
+                  onChange={(e) => setBookId(e.target.value)}
                   disabled={!subjectId}
                   className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 font-medium ${
-                    !subjectId 
-                      ? "border-gray-200 bg-gray-100 cursor-not-allowed" 
+                    !subjectId
+                      ? "border-gray-200 bg-gray-100 cursor-not-allowed"
                       : "border-gray-200 bg-white"
                   }`}
                 >
                   <option value="">Select Book</option>
-                  {books.map(b => (
+                  {books.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name}
                     </option>
@@ -341,16 +401,16 @@ export default function AdminOcrUpload() {
                 </label>
                 <select
                   value={chapterId}
-                  onChange={e => setChapterId(e.target.value)}
+                  onChange={(e) => setChapterId(e.target.value)}
                   disabled={!bookId}
                   className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 font-medium ${
-                    !bookId 
-                      ? "border-gray-200 bg-gray-100 cursor-not-allowed" 
+                    !bookId
+                      ? "border-gray-200 bg-gray-100 cursor-not-allowed"
                       : "border-gray-200 bg-white"
                   }`}
                 >
                   <option value="">Select Chapter</option>
-                  {chapters.map(ch => (
+                  {chapters.map((ch) => (
                     <option key={ch.id} value={ch.id}>
                       {ch.chapter_number}. {ch.name}
                     </option>
@@ -391,7 +451,8 @@ export default function AdminOcrUpload() {
                         />
                       </svg>
                       <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
                       </p>
                       <p className="text-xs text-gray-500">PDF only</p>
                     </div>

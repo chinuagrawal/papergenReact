@@ -101,11 +101,17 @@ function PaperGeneration() {
               Customize your question paper structure
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-semibold">
-              {selection.class?.class_name}
+              {selection.board?.name}
+            </div>
+            <div className="px-4 py-2 bg-indigo-100 text-indigo-800 rounded-lg text-sm font-semibold">
+              {selection.medium?.name}
             </div>
             <div className="px-4 py-2 bg-purple-100 text-purple-800 rounded-lg text-sm font-semibold">
+              {selection.class?.class_name}
+            </div>
+            <div className="px-4 py-2 bg-pink-100 text-pink-800 rounded-lg text-sm font-semibold">
               {selection.subject?.name}
             </div>
           </div>

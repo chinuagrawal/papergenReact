@@ -11,11 +11,13 @@ function TeacherDashboard() {
 
   // ---- Dashboard form states ----
   const [boards, setBoards] = useState([]);
+  const [mediums, setMediums] = useState([]);
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [books, setBooks] = useState([]);
 
   const [boardId, setBoardId] = useState("");
+  const [mediumId, setMediumId] = useState("");
   const [classId, setClassId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [selectedBookIds, setSelectedBookIds] = useState([]);
@@ -52,12 +54,35 @@ function TeacherDashboard() {
     fetchBoards();
   }, []);
 
-  // ---- Fetch Classes when Board changes ----
+  // ---- Fetch Mediums when Board changes ----
   useEffect(() => {
     if (boardId) {
+      const fetchMediums = async () => {
+        try {
+          const data = await api.getMediums(boardId);
+          setMediums(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.error("Failed to fetch mediums:", err);
+          setMediums([]);
+        }
+      };
+      fetchMediums();
+      setMediumId("");
+      setClassId("");
+      setSubjectId("");
+      setBooks([]);
+      setSelectedBookIds([]);
+    } else {
+      setMediums([]);
+    }
+  }, [boardId]);
+
+  // ---- Fetch Classes when Board and Medium changes ----
+  useEffect(() => {
+    if (boardId && mediumId) {
       const fetchClasses = async () => {
         try {
-          const data = await api.getClasses(boardId);
+          const data = await api.getClasses(boardId, mediumId);
           setClasses(Array.isArray(data) ? data : []);
         } catch (err) {
           console.error("Failed to fetch classes:", err);
@@ -72,7 +97,7 @@ function TeacherDashboard() {
     } else {
       setClasses([]);
     }
-  }, [boardId]);
+  }, [boardId, mediumId]);
 
   // ---- Fetch Subjects when Class changes ----
   useEffect(() => {
@@ -123,12 +148,19 @@ function TeacherDashboard() {
   };
 
   const handleSubmit = async () => {
-    if (!boardId || !classId || !subjectId || !selectedBookIds.length)
+    if (
+      !boardId ||
+      !mediumId ||
+      !classId ||
+      !subjectId ||
+      !selectedBookIds.length
+    )
       return alert(
-        "Please select Board, Class, Subject, and at least one Book",
+        "Please select Board, Medium, Class, Subject, and at least one Book",
       );
 
     const selectedBoard = boards.find((b) => b.id == boardId);
+    const selectedMedium = mediums.find((m) => m.id == mediumId);
     const selectedClass = classes.find((c) => c.id == classId);
     const selectedSubject = subjects.find((s) => s.id == subjectId);
     const selectedBooks = books.filter((b) => selectedBookIds.includes(b.id));
@@ -136,6 +168,7 @@ function TeacherDashboard() {
     navigate("/selectedBooks", {
       state: {
         board: selectedBoard,
+        medium: selectedMedium,
         class: selectedClass,
         subject: selectedSubject,
         books: selectedBooks,
@@ -221,6 +254,28 @@ function TeacherDashboard() {
               </select>
             </div>
 
+            {/* Medium */}
+            <div className="p-4 border-b border-gray-100 last:border-0">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Medium
+              </label>
+              <select
+                value={mediumId}
+                onChange={(e) => setMediumId(e.target.value)}
+                disabled={!boardId}
+                className={`w-full bg-transparent text-gray-800 font-medium focus:outline-none ${
+                  !boardId && "text-gray-400"
+                }`}
+              >
+                <option value="">Select Medium</option>
+                {mediums.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Class */}
             <div className="p-4 border-b border-gray-100 last:border-0">
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
@@ -229,9 +284,9 @@ function TeacherDashboard() {
               <select
                 value={classId}
                 onChange={(e) => setClassId(e.target.value)}
-                disabled={!boardId}
+                disabled={!boardId || !mediumId}
                 className={`w-full bg-transparent text-gray-800 font-medium focus:outline-none ${
-                  !boardId && "text-gray-400"
+                  !boardId || (!mediumId && "text-gray-400")
                 }`}
               >
                 <option value="">Select Class</option>

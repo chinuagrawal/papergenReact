@@ -101,6 +101,9 @@ function SelectChapter() {
             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
               {selection.board?.name}
             </span>
+            <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full">
+              {selection.medium?.name}
+            </span>
             <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">
               {selection.class?.class_name}
             </span>
