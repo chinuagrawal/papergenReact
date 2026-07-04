@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage";
 import RoleSelect from "./pages/RoleSelect";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import BooksPage from "./pages/booksPage";
@@ -17,7 +18,8 @@ function App() {
   return (
     <BrowserRouter basename="/">
       <Routes>
-        <Route path="/" element={<OtpLogin />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<OtpLogin />} />
         <Route path="/admin/review" element={<AdminReviewPanel />} />
         <Route path="/role" element={<RoleSelect />} />
         <Route path="/Login" element={<Loginpage />} />
@@ -30,7 +32,6 @@ function App() {
         />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/admin/master" element={<AdminMasterData />} />
-
         <Route path="/admin/ocr-upload" element={<AdminOcrUpload />} />
         <Route
           path="/admin/ocr-review/:jobId/:chapterId"
