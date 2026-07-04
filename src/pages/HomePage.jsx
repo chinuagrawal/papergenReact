@@ -1,8 +1,12 @@
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 function HomePage() {
+  useEffect(() => {
+    document.title = "ThePaperPlus | Modern Question Paper Intelligence";
+  }, []);
   return (
-    <div className="bg-surface text-on-surface">
+    <div className="bg-surface text-on-surface w-screen overflow-x-hidden">
       {/* TopAppBar */}
       <nav className="w-full top-0 sticky bg-[#f8f9fa] dark:bg-slate-900 shadow-sm dark:shadow-none z-50">
         <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
