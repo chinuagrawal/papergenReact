@@ -63,7 +63,6 @@ const OtpLogin = () => {
     try {
       const res = await axios.post(`${API}/api/verify-otp`, { mobile, otp });
       if (res.data.success) {
-        
         localStorage.setItem("userMobile", mobile);
         navigate("/role");
       } else alert(res.data.message || "Invalid OTP");
@@ -176,6 +175,7 @@ const OtpLogin = () => {
                   </div>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     placeholder="00000-00000"
                     value={mobile}
                     onChange={(e) =>
@@ -207,7 +207,8 @@ const OtpLogin = () => {
                     <input
                       key={index}
                       id={`otp-${index}`}
-                      type="text"
+                      type="tel"
+                      inputMode="numeric"
                       maxLength="1"
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
