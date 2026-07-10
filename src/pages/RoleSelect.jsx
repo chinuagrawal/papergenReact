@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -9,6 +10,24 @@ function RoleSelect() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedRole, setSelectedRole] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Check if user already has a role
+  useEffect(() => {
+    const mobile = localStorage.getItem("userMobile");
+    if (!mobile) return navigate("/login");
+
+    axios
+      .post(`${API}/api/get-user`, { mobile })
+      .then((res) => {
+        const role = res.data.user?.role;
+        if (role === "teacher") navigate("/teacher");
+        else if (role === "student") navigate("/student");
+      })
+      .catch(() => {
+        localStorage.clear();
+        navigate("/login");
+      });
+  }, []);
 
   const slides = [
     {

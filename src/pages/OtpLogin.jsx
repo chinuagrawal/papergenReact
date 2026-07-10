@@ -64,7 +64,18 @@ const OtpLogin = () => {
       const res = await axios.post(`${API}/api/verify-otp`, { mobile, otp });
       if (res.data.success) {
         localStorage.setItem("userMobile", mobile);
-        navigate("/role");
+        
+        // Check if user already has a role
+        const userRes = await axios.post(`${API}/api/get-user`, { mobile });
+        const role = userRes.data.user?.role;
+        
+        if (role === "teacher") {
+          navigate("/teacher");
+        } else if (role === "student") {
+          navigate("/student");
+        } else {
+          navigate("/role");
+        }
       } else alert(res.data.message || "Invalid OTP");
     } catch {
       alert("Error verifying OTP");
