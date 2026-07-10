@@ -8,6 +8,7 @@ function RoleSelect() {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedRole, setSelectedRole] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const slides = [
     {
@@ -40,6 +41,7 @@ function RoleSelect() {
     const mobile = localStorage.getItem("userMobile");
     if (!mobile) return navigate("/");
 
+    setIsLoading(true);
     try {
       const res = await fetch(`${API}/api/save-role`, {
         method: "POST",
@@ -57,6 +59,8 @@ function RoleSelect() {
     } catch (err) {
       console.error(err);
       alert("Network error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -374,14 +378,36 @@ function RoleSelect() {
             </p>
             <button
               onClick={() => selectedRole && handleSelect(selectedRole)}
-              disabled={!selectedRole}
-              className="w-full py-4 rounded-xl shadow-lg text-white font-headline font-bold text-lg active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!selectedRole || isLoading}
+              className="w-full py-4 rounded-xl shadow-lg text-white font-headline font-bold text-lg active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               style={{
                 background: "linear-gradient(135deg, #003d9b 0%, #0052cc 100%)",
                 boxShadow: "0 12px 40px -12px rgba(0, 61, 155, 0.2)",
               }}
             >
-              Continue Journey
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <span>Continue Journey</span>
+              )}
             </button>
           </div>
         </div>
